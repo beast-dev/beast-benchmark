@@ -39,9 +39,10 @@ from typing import Optional
 # Paths
 # ---------------------------------------------------------------------------
 
-BENCHMARKS_DIR = Path("Benchmarks")
-RESULTS_DIR    = Path("Results")
-CSV_PATH       = Path("results.csv")
+_SCRIPT_DIR    = Path(__file__).resolve().parent
+BENCHMARKS_DIR = _SCRIPT_DIR / "Benchmarks"
+RESULTS_DIR    = _SCRIPT_DIR / "Results"
+CSV_PATH       = _SCRIPT_DIR / "results.csv"
 
 
 # ---------------------------------------------------------------------------
