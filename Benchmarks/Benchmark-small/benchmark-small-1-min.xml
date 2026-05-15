@@ -14,8 +14,8 @@ Operators:
   - SubtreeLeap on tree with weight 71.0
   - fixedHeightSPR on tree with weight 7.1
   - upDown on rate and popSize with weight 3.0
-MCMC length: 10000000 
-Logging every: 10000
+MCMC length: 35000000 
+Logging every: 35000
 Seed: 1234
 Initial Joint density: -29529.1683
 Final Joint density: -6981.7346
@@ -676,7 +676,7 @@ Final Joint density: -6981.7346
 	
 
 	<!-- Define MCMC                                                             -->
-	<mcmc id="mcmc" chainLength="10000000" autoOptimize="true" operatorAnalysis="benchmark-small-1.ops">
+	<mcmc id="mcmc" chainLength="35000000" autoOptimize="true" operatorAnalysis="benchmark-small-1.ops">
 		<joint id="joint">
 			<prior id="prior">
 				<ctmcScalePrior>
@@ -700,7 +700,7 @@ Final Joint density: -6981.7346
 		<operators idref="operators"/>
 
 		<!-- write log to screen                                                     -->
-		<log id="screenLog" logEvery="10000">
+		<log id="screenLog" logEvery="35000">
 			<column label="Joint" dp="4" width="12">
 				<joint idref="joint"/>
 			</column>
@@ -719,7 +719,7 @@ Final Joint density: -6981.7346
 		</log>
 
 		<!-- write log to file                                                       -->
-		<log id="fileLog" logEvery="1000" fileName="benchmark-small-1.log" overwrite="false">
+		<log id="fileLog" logEvery="35000" fileName="benchmark-small-1.log" overwrite="false">
 			<joint idref="joint"/>
 			<prior idref="prior"/>
 			<likelihood idref="likelihood"/>
@@ -736,16 +736,13 @@ Final Joint density: -6981.7346
 		</log>
 
 		<!-- write tree log to file                                                  -->
-		<logTree id="treeFileLog" logEvery="1000" nexusFormat="true" fileName="benchmark-small-1.trees" sortTranslationTable="true">
+		<logTree id="treeFileLog" logEvery="35000" nexusFormat="true" fileName="benchmark-small-1.trees" sortTranslationTable="true">
 			<treeModel idref="treeModel"/>
 			<trait name="rate" tag="rate">
 				<strictClockBranchRates idref="branchRates"/>
 			</trait>
 			<joint idref="joint"/>
 		</logTree>
-
-		<!-- write state of Markov chain to checkpoint file                          -->
-		<logCheckpoint id="checkpointFileLog" checkpointEvery="1000000" checkpointFinal="10000000" fileName="benchmark-small-1.chkpt" overwrite="false"/>
 	</mcmc>
 	
 	<report>
