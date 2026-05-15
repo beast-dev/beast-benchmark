@@ -5,7 +5,7 @@ This folder contains the benchmarking infrastructure for measuring and validatin
 ## Folder layout
 
 ```
-Benchmarking/
+beast-benchmark/
 ├── benchmark.py          # The benchmark runner script
 ├── README.md             # This file
 ├── Benchmarks/           # Benchmark XML files, organised by type
@@ -72,13 +72,13 @@ python3 benchmark.py <type> <number> <model> [options]
 **Example — run the small-1 minimum-model benchmark:**
 
 ```bash
-python3 Benchmarking/benchmark.py small 1 min
+python3 benchmark.py small 1 min
 ```
 
 **Example — tag the run with a machine name:**
 
 ```bash
-python3 Benchmarking/benchmark.py small 1 min --machine bivalve
+python3 benchmark.py small 1 min --machine bivalve
 ```
 
 **Full usage:**
@@ -188,7 +188,7 @@ A failure indicates that either the BEAST implementation has changed in a way th
 3. Add the structured header comment (see format above).
 4. Run once with the canonical seed to obtain the initial and final joint densities:
    ```bash
-   python3 Benchmarking/benchmark.py {type} {number} {model} --seed 1234
+   python3 benchmark.py {type} {number} {model} --seed 1234
    ```
 5. Copy the reported joint densities into the XML header.
 6. Re-run to confirm both values show `✓ PASS`.
