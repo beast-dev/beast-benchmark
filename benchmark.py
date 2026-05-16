@@ -16,6 +16,7 @@ Options:
     --states STATES   Override number of MCMC states from XML header (for shorter test runs)
     --prefix PREFIX   Override the output file prefix (default: auto timestamp)
     --no-overwrite    Do not pass -overwrite to BEAST
+    --beast-args ARGS Extra arguments forwarded verbatim to BEAST (e.g. "-beagle_GPU -beagle_double")
 
 The XML header comment (see benchmark-big-1.xml) is parsed for expected values:
     MCMC length, Logging every, Seed, Initial Joint density, Final Joint density
@@ -722,6 +723,8 @@ def main():
                         help="Do not pass -overwrite to BEAST")
     parser.add_argument("--append", action="store_true",
                         help="Append results to results.csv in the current directory")
+    parser.add_argument("--beast-args", default=None, metavar="ARGS",
+                        help="Additional arguments passed directly to BEAST (e.g. '--beast-args \"-beagle_GPU -beagle_double\"')")
     args = parser.parse_args()
 
     btype = args.type.lower()
@@ -777,6 +780,9 @@ def main():
     ]
     if not args.no_overwrite:
         cmd.append("-overwrite")
+    if args.beast_args:
+        import shlex
+        cmd.extend(shlex.split(args.beast_args))
     cmd.append(str(xml_path))
 
     print(f"\n  Run directory: {run_dir.name}")
