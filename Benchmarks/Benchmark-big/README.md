@@ -32,3 +32,34 @@ Operators:
 - upDown on rate and popSize with weight 3.0
 
 MCMC: 1,000,000 states, logging every 1000 states
+
+## benchmark-big-3.xml
+
+Source data: bdbv_drc_2026-10-16_n899 (Bundibugyo virus, DRC; sparse mutations, many ambiguous sites)
+Taxa: 899
+Sites: 18903
+Site patterns: 5132 (min); for the MAT variant, 2405 variable sites, with sites that are constant
+apart from ambiguities in at most 25% of sequences counted as constant
+
+Model: HKY, strict clock, coalescent constant population tree prior (replacing the source's
+Bayesian SkyGrid, as in the other big benchmarks; the starting tree is simulated with popSize 1.0)
+Priors: kappa ~ LogNormal(1, 1.25), frequencies ~ Dirichlet(1), rate ~ CTMC reference prior,
+popSize ~ Gamma(0.001, 1000)
+Operators:
+- Scale on kappa with weight 1.0
+- DeltaExchange on frequencies with weight 1.0
+- Scale on rate with weight 3.0
+- upDown on node heights and rate with weight 3.0
+- SubtreeLeap on tree with weight 899.0
+- fixedHeightSPR on tree with weight 89.9
+- Scale on popSize with weight 3.0
+
+Variants (model label):
+- min: Felsenstein likelihood (BEAGLE)
+- mat: MAT likelihood with its default branch history model (integrated hits: multiple hits summed
+  analytically, which gives the same posterior as the Felsenstein likelihood)
+
+The MAT variant resamples the mutation history of every site with the SPR operators (by default with the
+local block) and needs the MAT branch of BEAST.
+
+MCMC: 2,000,000 states, logging every 2,000 states

@@ -109,7 +109,9 @@ STATE_HEADER_RE = re.compile(r'^state\t')
 STATE_ROW_RE = re.compile(r'^(\d+)\t')
 
 # Timing line at the very end of BEAST output: "X.Y minutes"
-BEAST_MINUTES_RE = re.compile(r'^([\d.]+)\s+minutes\s*$')
+# BEAST reports the total runtime in whichever unit fits (dr.util.Timer): seconds, minutes, hours or days
+BEAST_RUNTIME_RE = re.compile(r'^([\d.]+(?:[Ee][-+]?\d+)?)\s+(seconds|minutes|hours|days)\s*$')
+MINUTES_PER_UNIT = {"seconds": 1.0 / 60.0, "minutes": 1.0, "hours": 60.0, "days": 1440.0}
 
 # "X minutes/million states" embedded in state rows (last field)
 RATE_RE = re.compile(r'([\d.]+)\s+minutes/million states')
@@ -177,10 +179,10 @@ def parse_stdout(text: str) -> dict:
             rows.append(row)
             continue
 
-        # "X.Y minutes" total runtime line
-        m = BEAST_MINUTES_RE.match(line.strip())
+        # "X.Y minutes" (or seconds/hours/days) total runtime line, converted to minutes
+        m = BEAST_RUNTIME_RE.match(line.strip())
         if m:
-            beast_minutes = float(m.group(1))
+            beast_minutes = float(m.group(1)) * MINUTES_PER_UNIT[m.group(2)]
 
     initial_row = rows[0] if rows else {}
     final_row = rows[-1] if rows else {}
