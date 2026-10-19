@@ -11,8 +11,9 @@ Priors: rate ~ ApproximateReferencePrior, popSize ~ Gamma(0.001, 1000)
 Operators:
 - Scale on rate with weight 3.0
 - Scale on popSize with weight 3.0
-- SubtreeLeap on tree with weight 71.0 (with mutation history resampling)
-- fixedHeightSPR on tree with weight 7.1 (with mutation history resampling)
+- SubtreeLeap on tree with weight 165.0 (with mutation history resampling)
+- fixedHeightSPR on tree with weight 16.5 (with mutation history resampling)
+- mutationHistoryGibbs on the mutational history with weight 16.5 (a node and up to 2 ancestors)
 - upDown on rate and popSize with weight 3.0
 MCMC length: 20000000 
 Logging every: 20000
@@ -1341,6 +1342,9 @@ Final Joint density: -6173.1214
 		<scaleOperator scaleFactor="0.75" weight="3">
 			<parameter idref="constant.popSize"/>
 		</scaleOperator>
+		<mutationHistoryGibbsOperator weight="16.5" size="3">
+			<mutationHistoryResampler idref="matResampler"/>
+		</mutationHistoryGibbsOperator>
 	</operators>
 	
 

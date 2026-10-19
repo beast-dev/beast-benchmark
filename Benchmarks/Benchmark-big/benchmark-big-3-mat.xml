@@ -15,6 +15,7 @@ Operators:
   - upDown on node heights and rate with weight 3.0
   - SubtreeLeap on tree with weight 899.0 (with mutation history resampling of every site)
   - fixedHeightSPR on tree with weight 89.9 (with mutation history resampling of every site)
+  - mutationHistoryGibbs on the mutational history with weight 89.9 (a node and up to 2 ancestors)
   - Scale on popSize with weight 3.0
 MCMC length: 2000000
 Logging every: 2000
@@ -6493,6 +6494,9 @@ Final Joint density: -43315.3516
 		<scaleOperator scaleFactor="0.75" weight="3">
 			<parameter idref="constant.popSize"/>
 		</scaleOperator>
+		<mutationHistoryGibbsOperator weight="89.9" size="3">
+			<mutationHistoryResampler idref="matResampler"/>
+		</mutationHistoryGibbsOperator>
 	</operators>
 	
 
@@ -6546,7 +6550,6 @@ Final Joint density: -43315.3516
 
 		<!-- write log to file                                                       -->
 		<log id="fileLog" logEvery="2000" fileName="benchmark-big-3-mat.log" overwrite="false">
-			<matStatistic idref="mat"/>
 			<joint idref="joint"/>
 			<prior idref="prior"/>
 			<likelihood idref="likelihood"/>
@@ -6558,6 +6561,7 @@ Final Joint density: -43315.3516
 			<parameter idref="frequencies"/>
 			<parameter idref="clock.rate"/>
 			<rateStatistic idref="meanRate"/>
+			<matStatistic idref="mat"/>
 			<matDataLikelihood idref="treeLikelihood"/>
 			<strictClockBranchRates idref="branchRates"/>
 			<coalescentLikelihood idref="coalescent"/>

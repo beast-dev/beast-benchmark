@@ -13,6 +13,7 @@ Operators:
   - Scale on popSize with weight 3.0
   - SubtreeLeap on tree with weight 64.0 (with mutation history resampling)
   - fixedHeightSPR on tree with weight 6.4 (with mutation history resampling)
+  - mutationHistoryGibbs on the mutational history with weight 6.4 (a node and up to 2 ancestors)
   - upDown on rate and popSize with weight 3.0
 MCMC length: 10000000 
 Logging every: 10000
@@ -490,6 +491,9 @@ Final Joint density: -340963.1882
 		<scaleOperator scaleFactor="0.75" weight="3">
 			<parameter idref="constant.popSize"/>
 		</scaleOperator>
+		<mutationHistoryGibbsOperator weight="6.4" size="3">
+			<mutationHistoryResampler idref="matResampler"/>
+		</mutationHistoryGibbsOperator>
 	</operators>
 	
 
