@@ -1,2 +1,8 @@
 .DS_Store
 Results/
+operator_study/runs/
+operator_study/reference/
+operator_study/analysis/
+operator_study/beast-frozen.jar
+operator_study/conditions.csv
+__pycache__/
