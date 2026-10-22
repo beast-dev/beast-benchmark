@@ -60,6 +60,8 @@ Variants (model label):
   analytically, which gives the same posterior as the Felsenstein likelihood)
 
 The MAT variant resamples the mutation history of every site with the SPR operators (by default with the
-local block) and needs the MAT branch of BEAST.
+local block), and updates it with a Gibbs operator on the history (mutationHistoryGibbsOperator, weight
+89.9, which the local block needs for a correct posterior). It needs the MAT branch of BEAST
+(v10.6.0-mat2 or later).
 
 MCMC: 2,000,000 states, logging every 2,000 states
