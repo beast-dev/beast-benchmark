@@ -85,56 +85,64 @@ def arm_rows(config, arm):
     datasets = config["study_datasets"]
     rows = []
 
+    # per-dataset overrides in study.json: "arms" (which arms include it) and "reps" ({arm: n})
+    def in_arm(pool):
+        return [ds for ds in pool if arm in config["datasets"][ds].get("arms", [arm])]
+
+    def n_reps(ds, default):
+        return config["datasets"][ds].get("reps", {}).get(arm, default)
+
     if arm == "reference":
-        for ds in datasets:
-            states = config["datasets"][ds]["states"] * config["reference_multiplier"]
-            for rep in range(1, config["reference_runs"] + 1):
+        for ds in in_arm(datasets):
+            multiplier = config["datasets"][ds].get("reference_multiplier", config["reference_multiplier"])
+            states = config["datasets"][ds]["states"] * multiplier
+            for rep in range(1, n_reps(ds, config["reference_runs"]) + 1):
                 rows.append(make_row(config, arm, "default", ds, "min", 1000 + rep, states_tag="ref", states=states))
 
     elif arm == "pilot":
-        for ds in datasets:
-            for rep in range(1, config["pilot_runs"] + 1):
+        for ds in in_arm(datasets):
+            for rep in range(1, n_reps(ds, config["pilot_runs"]) + 1):
                 rows.append(make_row(config, arm, "default", ds, "min", rep))
 
     elif arm == "A1":
-        for ds in datasets:
+        for ds in in_arm(datasets):
             size = config["datasets"][ds]["sl_size"]
             if not size:
                 sys.exit(f"A1 needs datasets.{ds}.sl_size in study.json (the pilot's adapted SubtreeLeap size)")
             for mult in levels["A1_size_multipliers"]:
-                for rep in range(1, reps["A1"] + 1):
+                for rep in range(1, n_reps(ds, reps["A1"]) + 1):
                     rows.append(make_row(config, arm, mult, ds, "min", rep,
                                          sl_size=f"{size * mult:.6g}", sl_adapt="false"))
 
     elif arm == "A2":
-        for ds in datasets:
+        for ds in in_arm(datasets):
             for target in levels["A2_targets"]:
-                for rep in range(1, reps["A2"] + 1):
+                for rep in range(1, n_reps(ds, reps["A2"]) + 1):
                     rows.append(make_row(config, arm, target, ds, "min", rep, sl_target=target))
 
     elif arm == "A3":
-        for ds in datasets:
+        for ds in in_arm(datasets):
             for target in levels["A3_targets"]:
-                for rep in range(1, reps["A3"] + 1):
+                for rep in range(1, n_reps(ds, reps["A3"]) + 1):
                     rows.append(make_row(config, arm, target, ds, "min", rep, adaptation_target=target))
 
     elif arm in ("B1", "mat"):
         likelihood = "mat" if arm == "mat" else "min"
-        for ds in (config["mat_datasets"] if arm == "mat" else datasets):
+        for ds in in_arm(config["mat_datasets"] if arm == "mat" else datasets):
             for mult in levels["B1_tree_multipliers"]:
-                for rep in range(1, reps[arm] + 1):
+                for rep in range(1, n_reps(ds, reps[arm]) + 1):
                     rows.append(make_row(config, "B1" if arm == "B1" else "mat-B1", mult, ds, likelihood, rep,
                                          operator_weights=weights_spec({op: mult for op in TREE_OPERATORS})))
             if arm == "mat":
                 for target in levels["A2_targets"]:
-                    for rep in range(1, reps["mat"] + 1):
+                    for rep in range(1, n_reps(ds, reps["mat"]) + 1):
                         rows.append(make_row(config, "mat-A2", target, ds, likelihood, rep, sl_target=target))
 
     elif arm == "B2":
-        for ds in datasets:
+        for ds in in_arm(datasets):
             for fraction in levels["B2_fhspr_fractions"]:
                 factor = fraction / FHSPR_DEFAULT_FRACTION
-                for rep in range(1, reps["B2"] + 1):
+                for rep in range(1, n_reps(ds, reps["B2"]) + 1):
                     rows.append(make_row(config, arm, fraction, ds, "min", rep,
                                          operator_weights=weights_spec({TREE_OPERATORS[1]: factor})))
 
@@ -143,9 +151,9 @@ def arm_rows(config, arm):
         configs.update({k: v for k, v in config["confirm"].items() if v})
         if len(configs) == 1:
             sys.exit('Fill in study.json "confirm" with the best settings from A and B first')
-        for ds in datasets:
+        for ds in in_arm(datasets):
             for name, settings in configs.items():
-                for rep in range(1, reps["confirm"] + 1):
+                for rep in range(1, n_reps(ds, reps["confirm"]) + 1):
                     rows.append(make_row(config, arm, name, ds, "min", rep, **settings))
     else:
         sys.exit(f"Unknown arm {arm}")

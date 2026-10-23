@@ -37,10 +37,10 @@ python3 design.py pilot reference            # -> conditions.csv
 python3 run_grid.py --arm pilot              # default runs, seeds 1-3
 #    from runs/*/..ops, set datasets.*.sl_size (the adapted SubtreeLeap size) in study.json,
 #    and set datasets.*.states so the default reaches a min ESS of about 300
-python3 run_grid.py --arm reference
-python3 analyse.py reference                 # check max pairwise ASDSF < 0.01
-python3 design.py A1 A2 A3 B1 B2 mat --append
-python3 run_grid.py                          # resumable; shuffled order; 12 workers
+python3 design.py reference A1 A2 A3 B1 B2 mat   # regenerate (no --append): states/sl_size changed
+python3 run_grid.py --arm reference --workers 4 &  # long; start first, alongside the grid
+python3 run_grid.py --arm A1 --arm A2 --arm A3 --arm B1 --arm B2 --arm mat-A2 --arm mat-B1 --workers 8
+python3 analyse.py reference                 # once the reference is done; check max pairwise ASDSF < 0.01
 python3 analyse.py all                       # analysis/runs.csv, summary.csv, *.png
 #    fill study.json "confirm" (e.g. {"sl_target": 0.1, "operator_weights": "..."})
 python3 design.py confirm --append && python3 run_grid.py --arm confirm && python3 analyse.py summary
@@ -49,6 +49,8 @@ python3 design.py confirm --append && python3 run_grid.py --arm confirm && pytho
 Run ids include the chain length (e.g. `small-1-min_20M_default_s1`). Changing `states` after the pilot therefore creates new runs; it never silently reuses runs of the wrong length. Fix `states` before running the reference and the arms.
 
 For a quick smoke test, point `OPERATOR_STUDY_CONFIG` at a copy of `study.json` with a different `work_dir` and short chains.
+
+Per-dataset overrides in `study.json`: `arms` (which arms include the dataset), `reps` ({arm: n}) and `reference_multiplier`. tall-1 uses them because it mixes slowly (pilot: about 36 ESS/h). It runs at 60M states with 3 replicates of A2, B1 and B2 only, and its reference is 5× long.
 
 ## Metrics (analyse.py)
 
