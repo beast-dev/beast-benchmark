@@ -46,10 +46,10 @@ def load_conditions(path):
 
 
 def load_result(run_id):
-    path = RUNS_DIR / run_id / "result.json"
-    if not path.exists():
+    try:
+        result = json.loads((RUNS_DIR / run_id / "result.json").read_text())
+    except (OSError, ValueError):
         return None
-    result = json.loads(path.read_text())
     return result if result.get("exit_code") == 0 else None
 
 
