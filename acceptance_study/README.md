@@ -15,17 +15,23 @@ The two studies use the same harness. This directory has its own copy (`design.p
 | mat | A2 on the MAT XMLs (small-2, tall-1) | as A2 | 3 |
 | confirm | default against the best settings in `study.json` `"confirm"` | | 10 / 3 |
 
-The chain lengths (small-1 30M, small-2 40M, tall-1 60M) and the A1 sizes (44.6, 0.416 and 0.36) come from the pilot in the weights study. They do not need re-piloting unless this machine is a different model. The design is 222 runs, about 315 core-hours, which is roughly 26 h on 12 workers. The MAT timings are guesses.
+The chain lengths (small-1 30M, small-2 40M, tall-1 60M) and the A1 sizes (44.6, 0.416 and 0.36) come from the pilot in the weights study. They do not need re-piloting unless this machine is a different model. The design is 222 runs, about 323 core-hours, which is roughly 27 h on 12 workers.
 
 ## Workflow
 
+Use **one** `run_grid.py` with 12 workers on the M2 Ultra's 16 performance cores. A second grid alongside it overloads the machine and slows every run, which biases ESS per hour.
+
 ```sh
 cd acceptance_study
+# build BEAST first (BEAST branch operator_study, `ant dist`); the first run freezes build/dist/beast.jar
 python3 design.py A1 A2 A3 A4 mat            # -> conditions.csv (222 runs)
-python3 run_grid.py                          # resumable, shuffled, 12 workers; freezes ../../BEAST/build/dist/beast.jar
+python3 run_grid.py --check                  # pre-flight, about 15 s
+python3 run_grid.py                          # prints core-hours and ETA (about 27 h)
 ```
 
-The split-frequency metrics (rf, split_min, asdsf) need the reference posteriors. The weights study computes them, and `analyse.py` reads them from `../operator_study/reference/` (`"reference_dir"` in `study.json`). Once the weights machine has run `analyse.py reference` and committed `operator_study/reference/*.json` (with `git add -f`; the directory is ignored), fetch them here:
+Runs start longest first (tall-1 first). Ctrl-C, or `kill` of the `run_grid.py` process, stops every BEAST run it started. Interrupted runs are redone on restart, and finished runs are kept. To start completely afresh, stop the grid, then delete `runs/`, `conditions.csv`, `beast-frozen.jar` and `analysis/`.
+
+The split-frequency metrics (rf, split_min, asdsf) need the reference posteriors. The weights study computes them, and `analyse.py` reads them from `../operator_study/reference/` (`"reference_dir"` in `study.json`). Once the weights machine has committed them, fetch them here:
 
 ```sh
 git fetch origin && git checkout origin/operator_study -- operator_study/reference
@@ -34,7 +40,7 @@ python3 analyse.py all                       # analysis/runs.csv, summary.csv, *
 python3 design.py confirm --append && python3 run_grid.py --arm confirm && python3 analyse.py summary
 ```
 
-`analyse.py runs` works without the reference and gives the continuous-parameter ESS.
+`analyse.py runs` works without the reference and gives the continuous-parameter ESS, per hour (`eff_*`) and per million states (`mst_*`).
 
 ## What to look at
 
