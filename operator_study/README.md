@@ -5,6 +5,8 @@ Tests two BEAST defaults using ESS per hour:
 - **A: the 0.234 target acceptance**, especially for SubtreeLeap.
 - **B: the relative operator weights.** The default gives SubtreeLeap weight = nTaxa, FHSPR = SubtreeLeap/10, and each scalar parameter 3.
 
+**Study A now runs separately**, on the `subtreeleap_acceptance` branch in `acceptance_study/`, so that it can use a second machine. This machine runs B, the reference posteriors (which both studies use) and the pilot. `design.py` can still generate the A arms.
+
 Datasets: small-1, small-2 and tall-1. BEAGLE (`-min`) is the primary arm. The MAT variants of small-2 and tall-1 form a secondary arm.
 
 Requires the BEAST `operator_study` branch, which adds:
@@ -37,10 +39,11 @@ python3 design.py pilot reference            # -> conditions.csv
 python3 run_grid.py --arm pilot              # default runs, seeds 1-3
 #    from runs/*/..ops, set datasets.*.sl_size (the adapted SubtreeLeap size) in study.json,
 #    and set datasets.*.states so the default reaches a min ESS of about 300
-python3 design.py reference A1 A2 A3 B1 B2 mat   # regenerate (no --append): states/sl_size changed
+python3 design.py reference B1 B2 mat       # regenerate (no --append): states/sl_size changed
 python3 run_grid.py --arm reference --workers 4 &  # long; start first, alongside the grid
-python3 run_grid.py --arm A1 --arm A2 --arm A3 --arm B1 --arm B2 --arm mat-A2 --arm mat-B1 --workers 8
+python3 run_grid.py --arm B1 --arm B2 --arm mat-B1 --workers 8
 python3 analyse.py reference                 # once the reference is done; check max pairwise ASDSF < 0.01
+git add -f reference/*.json && git commit -m "Reference posteriors" && git push   # the acceptance study reads these
 python3 analyse.py all                       # analysis/runs.csv, summary.csv, *.png
 #    fill study.json "confirm" (e.g. {"sl_target": 0.1, "operator_weights": "..."})
 python3 design.py confirm --append && python3 run_grid.py --arm confirm && python3 analyse.py summary
