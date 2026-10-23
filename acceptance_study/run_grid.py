@@ -55,10 +55,11 @@ def frozen_jar(config) -> tuple:
 
 
 def is_complete(run_dir) -> bool:
-    result = run_dir / "result.json"
-    if not result.exists():
+    # a missing or unreadable result (e.g. cut off by Ctrl-C) means the run is redone
+    try:
+        return json.loads((run_dir / "result.json").read_text()).get("exit_code") == 0
+    except (OSError, ValueError):
         return False
-    return json.loads(result.read_text()).get("exit_code") == 0
 
 
 def beast_command(config, jar, cond) -> list:
@@ -96,7 +97,10 @@ def run_one(config, jar, jar_hash, cond, system):
         "finished": datetime.now().isoformat(timespec="seconds"),
         "system": system,
     }
-    (run_dir / "result.json").write_text(json.dumps(result, indent=2))
+    # write then rename, so an interrupted write never leaves a partial result.json
+    tmp = run_dir / "result.json.tmp"
+    tmp.write_text(json.dumps(result, indent=2))
+    tmp.replace(run_dir / "result.json")
     return cond["run_id"], exit_code, wall
 
 
