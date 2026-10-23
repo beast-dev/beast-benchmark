@@ -32,32 +32,34 @@ Run ids are built from the effective settings. A cell that is just the default (
 
 ## Workflow
 
+The pilot is done: its results are in `pilot/`, and the chain lengths and A1 sizes in `study.json` come from it. This machine runs the reference posteriors and the B arms in **one** `run_grid.py`, with 12 workers on the M2 Ultra's 16 performance cores. Don't start a second grid alongside it: that is what overloaded the first attempt.
+
 ```sh
 cd operator_study
-# 0. build BEAST (operator_study branch); run_grid.py freezes build/dist/beast.jar on first use
-python3 design.py pilot reference            # -> conditions.csv
-python3 run_grid.py --arm pilot              # default runs, seeds 1-3
-#    from runs/*/..ops, set datasets.*.sl_size (the adapted SubtreeLeap size) in study.json,
-#    and set datasets.*.states so the default reaches a min ESS of about 300
-python3 design.py reference B1 B2 mat       # regenerate (no --append): states/sl_size changed
-python3 run_grid.py --arm reference --workers 4 &  # long; start first, alongside the grid
-python3 run_grid.py --arm B1 --arm B2 --arm mat-B1 --workers 8
-python3 analyse.py reference                 # once the reference is done; check max pairwise ASDSF < 0.01
+# build BEAST first (BEAST branch operator_study, `ant dist`); the first run freezes build/dist/beast.jar
+python3 design.py reference B1 B2 mat        # -> conditions.csv (159 runs to run, below)
+python3 run_grid.py --check --arm reference --arm B1 --arm B2 --arm mat-B1    # pre-flight, about 15 s
+python3 run_grid.py --arm reference --arm B1 --arm B2 --arm mat-B1            # prints core-hours and ETA
+python3 analyse.py reference                 # when the reference is done; check max pairwise ASDSF < 0.01
 git add -f reference/*.json && git commit -m "Reference posteriors" && git push   # the acceptance study reads these
 python3 analyse.py all                       # analysis/runs.csv, summary.csv, *.png
 #    fill study.json "confirm" (e.g. {"sl_target": 0.1, "operator_weights": "..."})
 python3 design.py confirm --append && python3 run_grid.py --arm confirm && python3 analyse.py summary
 ```
 
-Run ids include the chain length (e.g. `small-1-min_20M_default_s1`). Changing `states` after the pilot therefore creates new runs; it never silently reuses runs of the wrong length. Fix `states` before running the reference and the arms.
+Runs start longest first, so the long reference runs go first. Ctrl-C, or `kill` of the `run_grid.py` process, stops every BEAST run it started. Interrupted runs are redone on restart, and finished runs are kept. Each run locks its directory while it runs, so a second grid started by mistake skips runs that are already in progress.
+
+To start completely afresh, stop the grid, then delete `runs/`, `conditions.csv`, `beast-frozen.jar`, `reference/` and `analysis/`.
+
+Run ids include the chain length (e.g. `small-1-min_30M_default_s1`). Changing `states` therefore creates new runs; it never silently reuses runs of the wrong length.
 
 For a quick smoke test, point `OPERATOR_STUDY_CONFIG` at a copy of `study.json` with a different `work_dir` and short chains.
 
-Per-dataset overrides in `study.json`: `arms` (which arms include the dataset), `reps` ({arm: n}) and `reference_multiplier`. tall-1 uses them because it mixes slowly (pilot: about 36 ESS/h). It runs at 60M states with 3 replicates of A2, B1 and B2 only, and its reference is 5× long.
+Per-dataset settings in `study.json`: `minutes_per_mstate` (pilot speeds, used for ordering and the ETA), `arms` (which arms include the dataset), `reps` ({arm: n}) and `reference_multiplier`. tall-1 uses them because it mixes slowly (pilot: about 36 ESS/h). It runs at 60M states with 3 replicates of A2, B1 and B2 only, and its reference is 5× long.
 
 ## Metrics (analyse.py)
 
-- **ESS** uses the same estimator as Tracer/`loganalyser` (`TraceCorrelation`). It is computed after 10% burn-in, and per hour of BEAST run time.
+- **ESS** uses the same estimator as Tracer/`loganalyser` (`TraceCorrelation`). It is computed after 10% burn-in, and reported per hour of BEAST run time (`eff_*`) and per million states (`mst_*`). The per-state figure doesn't depend on how loaded the machine was.
 - **min_cont:** the minimum ESS over joint, prior, likelihood, rootHeight, treeLength, popSize, clock.rate and kappa.
 - **rf:** the ESS of the Robinson–Foulds distance to the reference focal tree.
 - **split_min:** the minimum ESS over the indicator traces of the 50 most uncertain reference clades (frequency between 0.05 and 0.95). A clade that is never or always present counts as an ESS of 1.

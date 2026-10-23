@@ -10,7 +10,8 @@ Analyses completed study runs.
                          configuration -> analysis/summary.csv and analysis/*.png
   analyse.py all         all three
 
-Efficiency is ESS per hour of BEAST run time, for:
+Efficiency is ESS per hour of BEAST run time (eff_*), and ESS per million states
+(mst_*), which does not depend on how loaded the machine was, for:
   min_cont   the smallest ESS over the headline continuous parameters
   rf         Robinson-Foulds distance to the reference focal tree
   split_min  the smallest ESS over indicator traces of the uncertain clades
@@ -182,9 +183,12 @@ def run_metrics(config, run_id, result, reference):
         m["max_split_deviation"] = max_dev
         m["asdsf_x_sqrt_hours"] = asdsf * math.sqrt(hours)
 
+    mstates = int(result["states"]) / 1e6
     for metric in METRICS:
         value = m.get(f"ess_{metric}")
-        m[f"eff_{metric}"] = value / hours if value is not None and not math.isnan(value) else float("nan")
+        valid = value is not None and not math.isnan(value)
+        m[f"eff_{metric}"] = value / hours if valid else float("nan")
+        m[f"mst_{metric}"] = value / mstates if valid else float("nan")
 
     ops = read_ops(run_dir / f"{run_id}.ops")
     total_time = sum(o["time_s"] for o in ops.values())
@@ -217,7 +221,7 @@ def analyse_runs(config, conditions, force=False):
         reference = references[key]
         if cache.exists() and not force:
             m = json.loads(cache.read_text())
-            if reference and "ess_rf" not in m:
+            if (reference and "ess_rf" not in m) or "mst_min_cont" not in m:
                 m = run_metrics(config, run_id, result, reference)
         else:
             m = run_metrics(config, run_id, result, reference)
@@ -282,10 +286,10 @@ def summarise(conditions, metrics):
         row = {"arm": arm, "dataset": dataset, "likelihood": likelihood, "level": level, "n": len(runs),
                "n_default": len(base)}
         for metric in METRICS:
-            key = f"eff_{metric}"
-            row[f"{key}_gmean"] = geometric_mean([r.get(key) for r in runs])
-            ratio, lo, hi = bootstrap_ratio([r.get(key) for r in runs], [r.get(key) for r in base])
-            row[f"{key}_ratio"], row[f"{key}_lo"], row[f"{key}_hi"] = ratio, lo, hi
+            for key in (f"eff_{metric}", f"mst_{metric}"):
+                row[f"{key}_gmean"] = geometric_mean([r.get(key) for r in runs])
+                ratio, lo, hi = bootstrap_ratio([r.get(key) for r in runs], [r.get(key) for r in base])
+                row[f"{key}_ratio"], row[f"{key}_lo"], row[f"{key}_hi"] = ratio, lo, hi
         for key in ("asdsf", "asdsf_x_sqrt_hours", "sl_accept", "sl_tuning", "sl_topologyChanged",
                     "sl_us_per_op", "fhspr_accept", "hours"):
             vals = [r[key] for r in runs if r.get(key) is not None and math.isfinite(r[key])]
@@ -375,7 +379,8 @@ def main():
     global RUNS_DIR, REFERENCE_DIR, ANALYSIS_DIR
     config = load_config()
     RUNS_DIR = work_dir(config) / "runs"
-    REFERENCE_DIR = work_dir(config) / "reference"
+    # the reference posteriors can be shared with another study ("reference_dir" in study.json)
+    REFERENCE_DIR = work_dir(config) / config.get("reference_dir", "reference")
     ANALYSIS_DIR = work_dir(config) / "analysis"
     conditions = load_conditions(args.conditions or work_dir(config) / "conditions.csv")
     if args.command in ("reference", "all"):

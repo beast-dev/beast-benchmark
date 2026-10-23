@@ -2,6 +2,7 @@
   "beast_jar": "../BEAST/build/dist/beast.jar",
   "java_args": [
     "-Xmx2g",
+    "-XX:+UseSerialGC",
     "-Djava.library.path=/opt/homebrew/lib"
   ],
   "beast_args": [
@@ -35,19 +36,30 @@
       "xml": "Benchmarks/Benchmark-small/benchmark-small-1-{likelihood}.xml",
       "taxa": 71,
       "states": 30000000,
-      "sl_size": 44.6
+      "sl_size": 44.6,
+      "minutes_per_mstate": {
+        "min": 1.4
+      }
     },
     "small-2": {
       "xml": "Benchmarks/Benchmark-small/benchmark-small-2-{likelihood}.xml",
       "taxa": 165,
       "states": 40000000,
-      "sl_size": 0.416
+      "sl_size": 0.416,
+      "minutes_per_mstate": {
+        "min": 1.55,
+        "mat": 1.0
+      }
     },
     "tall-1": {
       "xml": "Benchmarks/Benchmark-tall/benchmark-tall-1-{likelihood}.xml",
       "taxa": 1441,
       "states": 60000000,
       "sl_size": 0.36,
+      "minutes_per_mstate": {
+        "min": 3.8,
+        "mat": 1.8
+      },
       "reference_multiplier": 5,
       "arms": [
         "pilot",
