@@ -6,3 +6,8 @@ operator_study/analysis/
 operator_study/beast-frozen.jar
 operator_study/conditions.csv
 __pycache__/
+acceptance_study/runs/
+acceptance_study/reference/
+acceptance_study/analysis/
+acceptance_study/beast-frozen.jar
+acceptance_study/conditions.csv
