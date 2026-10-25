@@ -41,7 +41,7 @@ python3 design.py reference B1 B2 mat        # -> conditions.csv (159 runs to ru
 python3 run_grid.py --check --arm reference --arm B1 --arm B2 --arm mat-B1    # pre-flight, about 15 s
 python3 run_grid.py --arm reference --arm B1 --arm B2 --arm mat-B1            # prints core-hours and ETA
 python3 analyse.py reference                 # when the reference is done; check max pairwise ASDSF < 0.01
-git add -f reference/*.json && git commit -m "Reference posteriors" && git push   # the acceptance study reads these
+git add -f reference/*.json.gz && git commit -m "Reference posteriors" && git push   # the acceptance study reads these
 python3 analyse.py all                       # analysis/runs.csv, summary.csv, *.png
 #    fill study.json "confirm" (e.g. {"sl_target": 0.1, "operator_weights": "..."})
 python3 design.py confirm --append && python3 run_grid.py --arm confirm && python3 analyse.py summary

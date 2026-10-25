@@ -21,6 +21,7 @@ and accuracy per cost as ASDSF against the reference x sqrt(hours).
 
 import argparse
 import csv
+import gzip
 import json
 import math
 import random
@@ -38,6 +39,10 @@ RUNS_DIR = REFERENCE_DIR = ANALYSIS_DIR = None
 HEADLINE_PARAMETERS = ["joint", "prior", "likelihood", "rootHeight", "treeLength",
                        "constant.popSize", "clock.rate", "kappa"]
 MAX_SPLIT_INDICATORS = 50
+# clades rarer than this are left out of the stored reference: the metrics only use clades at
+# >= 1% (ASDSF) or 5-95% (split ESS), and keeping every clade of a diffuse tree posterior
+# (tall-1) made the file over 500 MB
+REFERENCE_MIN_FREQ = 0.001
 METRICS = ["min_cont", "rf", "split_min"]
 
 
@@ -110,20 +115,26 @@ def build_reference(config, conditions):
             "parameter_means": {k: float(np.mean(v)) for k, v in params.items()},
             "parameter_run_spread": {k: float(np.std(v)) for k, v in params.items()},
             "focal_clades": [format(c, "x") for c in focal],
-            "clade_frequencies": clades_to_json(pooled),
+            "min_stored_frequency": REFERENCE_MIN_FREQ,
+            "clades_seen": len(pooled),
+            "clade_frequencies": clades_to_json({c: f for c, f in pooled.items() if f >= REFERENCE_MIN_FREQ}),
         }
-        path = REFERENCE_DIR / f"{dataset}-min.json"
-        path.write_text(json.dumps(out))
+        path = REFERENCE_DIR / f"{dataset}-min.json.gz"
+        with gzip.open(path, "wt") as f:
+            json.dump(out, f)
+        (REFERENCE_DIR / f"{dataset}-min.json").unlink(missing_ok=True)  # the old uncompressed form
         flag = "" if out["max_pairwise_asdsf"] < 0.01 else "  <-- reference runs disagree, run longer"
         print(f"{dataset}: {len(done)} runs, {len(all_trees)} trees, "
-              f"max pairwise ASDSF {out['max_pairwise_asdsf']:.4f}{flag}")
+              f"{len(out['clade_frequencies'])} of {len(pooled)} clades stored, "
+              f"{path.stat().st_size / 1e6:.1f} MB, max pairwise ASDSF {out['max_pairwise_asdsf']:.4f}{flag}")
 
 
 def load_reference(key):
-    path = REFERENCE_DIR / f"{key}.json"
+    path = REFERENCE_DIR / f"{key}.json.gz"
     if not path.exists():
         return None
-    data = json.loads(path.read_text())
+    with gzip.open(path, "rt") as f:
+        data = json.load(f)
     data["clade_frequencies"] = clades_from_json(data["clade_frequencies"])
     data["focal_clades"] = {int(c, 16) for c in data["focal_clades"]}
     return data
