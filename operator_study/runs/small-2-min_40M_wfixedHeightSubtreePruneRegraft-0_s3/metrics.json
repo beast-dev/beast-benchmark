@@ -1,0 +1,73 @@
+{
+ "run_id": "small-2-min_40M_wfixedHeightSubtreePruneRegraft-0_s3",
+ "hours": 1.5242963888888887,
+ "samples": 1801,
+ "ess_joint": 413.86566272973204,
+ "ess_prior": 646.206188786207,
+ "ess_likelihood": 1801.0,
+ "ess_rootHeight": 1047.1353335178273,
+ "ess_age(root)": 1047.1353335178514,
+ "ess_treeLength": 607.1647486669958,
+ "ess_constant.popSize": 704.2441738781323,
+ "ess_clock.rate": 728.6916077901566,
+ "ess_meanRate": 728.6916077901568,
+ "ess_treeLikelihood": 1801.0,
+ "ess_branchRates": NaN,
+ "ess_coalescent": 646.189045109919,
+ "sl_topologyChanged": 0.7479555802332037,
+ "sl_mean_delta": 0.3243410413947638,
+ "ess_min_cont": 413.86566272973204,
+ "ess_min_cont_parameter": "joint",
+ "ess_rf": 1576.0841976094039,
+ "rf_mean": 180.74625208217657,
+ "split_indicators": 50,
+ "ess_split_min": 674.319228703954,
+ "ess_split_median": 1716.3024042836369,
+ "asdsf": 0.004165718818662074,
+ "max_split_deviation": 0.0316490838423098,
+ "asdsf_x_sqrt_hours": 0.005143096375964805,
+ "eff_min_cont": 271.51259147928096,
+ "mst_min_cont": 10.346641568243301,
+ "eff_rf": 1033.9748943171512,
+ "mst_rf": 39.4021049402351,
+ "eff_split_min": 442.3806509149366,
+ "mst_split_min": 16.85798071759885,
+ "sl_accept": 0.234,
+ "sl_tuning": 0.434,
+ "sl_us_per_op": 134.78,
+ "sl_time_fraction": 0.933380297534195,
+ "operators": {
+  "scale(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 0.714,
+   "count": 681911,
+   "time_s": 180.75,
+   "time_per_op_us": 265.06,
+   "accept": 0.234
+  },
+  "up(nodeHeights(treeModel))/down(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 0.995,
+   "count": 683911,
+   "time_s": 139.4,
+   "time_per_op_us": 203.82,
+   "accept": 0.234
+  },
+  "subtreeLeap(treeModel)": {
+   "weight": 165.0,
+   "tuning": 0.434,
+   "count": 37552201,
+   "time_s": 5061.32,
+   "time_per_op_us": 134.78,
+   "accept": 0.234
+  },
+  "scale(constant.popSize)": {
+   "weight": 3.0,
+   "tuning": 0.604,
+   "count": 681977,
+   "time_s": 41.1,
+   "time_per_op_us": 60.27,
+   "accept": 0.2339
+  }
+ }
+}

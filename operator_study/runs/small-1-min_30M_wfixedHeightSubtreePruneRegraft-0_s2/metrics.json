@@ -1,0 +1,73 @@
+{
+ "run_id": "small-1-min_30M_wfixedHeightSubtreePruneRegraft-0_s2",
+ "hours": 1.0689494444444445,
+ "samples": 1801,
+ "ess_joint": 480.6567482976303,
+ "ess_prior": 421.5323527931717,
+ "ess_likelihood": 1274.7538924714902,
+ "ess_rootHeight": 446.42582093972936,
+ "ess_age(root)": 446.42582093972936,
+ "ess_treeLength": 411.4715731227801,
+ "ess_constant.popSize": 503.6468240679293,
+ "ess_clock.rate": 452.33949229629155,
+ "ess_meanRate": 452.3394922962916,
+ "ess_treeLikelihood": 1274.7538924714902,
+ "ess_branchRates": NaN,
+ "ess_coalescent": 421.5974670940044,
+ "sl_topologyChanged": 0.5151571349250417,
+ "sl_mean_delta": 35.28376328798221,
+ "ess_min_cont": 411.4715731227801,
+ "ess_min_cont_parameter": "treeLength",
+ "ess_rf": 1801.0000000000002,
+ "rf_mean": 16.07662409772349,
+ "split_indicators": 50,
+ "ess_split_min": 1197.449070233232,
+ "ess_split_median": 1690.1471130413026,
+ "asdsf": 0.004255968906163239,
+ "max_split_deviation": 0.029428095502498586,
+ "asdsf_x_sqrt_hours": 0.004400246734618304,
+ "eff_min_cont": 384.9308077770044,
+ "mst_min_cont": 13.71571910409267,
+ "eff_rf": 1684.8317844779065,
+ "mst_rf": 60.03333333333334,
+ "eff_split_min": 1120.2111348264664,
+ "mst_split_min": 39.9149690077744,
+ "sl_accept": 0.2341,
+ "sl_tuning": 50.695,
+ "sl_us_per_op": 128.34,
+ "sl_time_fraction": 0.889833473179739,
+ "operators": {
+  "scale(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 0.796,
+   "count": 1114676,
+   "time_s": 201.96,
+   "time_per_op_us": 181.18,
+   "accept": 0.2345
+  },
+  "up(nodeHeights(treeModel))/down(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 0.888,
+   "count": 1113276,
+   "time_s": 151.66,
+   "time_per_op_us": 136.23,
+   "accept": 0.2334
+  },
+  "subtreeLeap(treeModel)": {
+   "weight": 71.0,
+   "tuning": 50.695,
+   "count": 26359544,
+   "time_s": 3382.96,
+   "time_per_op_us": 128.34,
+   "accept": 0.2341
+  },
+  "scale(constant.popSize)": {
+   "weight": 3.0,
+   "tuning": 0.484,
+   "count": 1112504,
+   "time_s": 65.21,
+   "time_per_op_us": 58.61,
+   "accept": 0.2342
+  }
+ }
+}

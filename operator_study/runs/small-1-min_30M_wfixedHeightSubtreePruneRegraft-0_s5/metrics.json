@@ -1,0 +1,73 @@
+{
+ "run_id": "small-1-min_30M_wfixedHeightSubtreePruneRegraft-0_s5",
+ "hours": 1.0609241666666667,
+ "samples": 1801,
+ "ess_joint": 534.2429076808353,
+ "ess_prior": 477.5781564453519,
+ "ess_likelihood": 1581.4243760808552,
+ "ess_rootHeight": 503.603356361003,
+ "ess_age(root)": 503.6033563610031,
+ "ess_treeLength": 460.8020507440103,
+ "ess_constant.popSize": 509.3760416066348,
+ "ess_clock.rate": 509.96090713247196,
+ "ess_meanRate": 509.96090713247196,
+ "ess_treeLikelihood": 1581.4243760808552,
+ "ess_branchRates": NaN,
+ "ess_coalescent": 478.97631293184355,
+ "sl_topologyChanged": 0.5158073292615214,
+ "sl_mean_delta": 35.259690027075635,
+ "ess_min_cont": 460.8020507440103,
+ "ess_min_cont_parameter": "treeLength",
+ "ess_rf": 1801.0,
+ "rf_mean": 15.707940033314825,
+ "split_indicators": 50,
+ "ess_split_min": 1194.2024353874126,
+ "ess_split_median": 1796.0289512419172,
+ "asdsf": 0.0062621575210240026,
+ "max_split_deviation": 0.03928373126041085,
+ "asdsf_x_sqrt_hours": 0.006450095710058413,
+ "eff_min_cont": 434.3402339413297,
+ "mst_min_cont": 15.360068358133676,
+ "eff_rf": 1697.5765625724114,
+ "mst_rf": 60.03333333333333,
+ "eff_split_min": 1125.6246892174158,
+ "mst_split_min": 39.806747846247085,
+ "sl_accept": 0.2341,
+ "sl_tuning": 50.7,
+ "sl_us_per_op": 127.28,
+ "sl_time_fraction": 0.8896873400703758,
+ "operators": {
+  "scale(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 0.801,
+   "count": 1113483,
+   "time_s": 199.89,
+   "time_per_op_us": 179.52,
+   "accept": 0.2341
+  },
+  "up(nodeHeights(treeModel))/down(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 0.887,
+   "count": 1114028,
+   "time_s": 151.81,
+   "time_per_op_us": 136.27,
+   "accept": 0.2341
+  },
+  "subtreeLeap(treeModel)": {
+   "weight": 71.0,
+   "tuning": 50.7,
+   "count": 26360214,
+   "time_s": 3355.18,
+   "time_per_op_us": 127.28,
+   "accept": 0.2341
+  },
+  "scale(constant.popSize)": {
+   "weight": 3.0,
+   "tuning": 0.488,
+   "count": 1112275,
+   "time_s": 64.31,
+   "time_per_op_us": 57.82,
+   "accept": 0.2339
+  }
+ }
+}

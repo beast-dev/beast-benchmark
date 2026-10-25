@@ -1,0 +1,73 @@
+{
+ "run_id": "small-1-min_30M_wfixedHeightSubtreePruneRegraft-0_s4",
+ "hours": 1.0860100000000001,
+ "samples": 1801,
+ "ess_joint": 561.0890209912161,
+ "ess_prior": 528.3508863398405,
+ "ess_likelihood": 1703.5743256582293,
+ "ess_rootHeight": 552.3733200703067,
+ "ess_age(root)": 552.3733200703067,
+ "ess_treeLength": 522.8131077015572,
+ "ess_constant.popSize": 608.826455354198,
+ "ess_clock.rate": 541.68645435723,
+ "ess_meanRate": 541.68645435723,
+ "ess_treeLikelihood": 1703.5743256582293,
+ "ess_branchRates": NaN,
+ "ess_coalescent": 528.411472140789,
+ "sl_topologyChanged": 0.51453026096613,
+ "sl_mean_delta": 35.30105766347537,
+ "ess_min_cont": 522.8131077015572,
+ "ess_min_cont_parameter": "treeLength",
+ "ess_rf": 1679.2746436454086,
+ "rf_mean": 16.008883953359245,
+ "split_indicators": 50,
+ "ess_split_min": 1219.5944515960357,
+ "ess_split_median": 1720.9070243068413,
+ "asdsf": 0.003983807107888497,
+ "max_split_deviation": 0.026235424764019966,
+ "asdsf_x_sqrt_hours": 0.004151597237247353,
+ "eff_min_cont": 481.40726853487274,
+ "mst_min_cont": 17.427103590051907,
+ "eff_rf": 1546.2791720568027,
+ "mst_rf": 55.97582145484695,
+ "eff_split_min": 1123.0048080552071,
+ "mst_split_min": 40.653148386534525,
+ "sl_accept": 0.2339,
+ "sl_tuning": 42.034,
+ "sl_us_per_op": 130.47,
+ "sl_time_fraction": 0.8905415693443889,
+ "operators": {
+  "scale(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 0.797,
+   "count": 1112104,
+   "time_s": 203.19,
+   "time_per_op_us": 182.7,
+   "accept": 0.2342
+  },
+  "up(nodeHeights(treeModel))/down(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 0.896,
+   "count": 1114610,
+   "time_s": 153.0,
+   "time_per_op_us": 137.27,
+   "accept": 0.2342
+  },
+  "subtreeLeap(treeModel)": {
+   "weight": 71.0,
+   "tuning": 42.034,
+   "count": 26358768,
+   "time_s": 3439.04,
+   "time_per_op_us": 130.47,
+   "accept": 0.2339
+  },
+  "scale(constant.popSize)": {
+   "weight": 3.0,
+   "tuning": 0.486,
+   "count": 1114518,
+   "time_s": 66.51,
+   "time_per_op_us": 59.67,
+   "accept": 0.234
+  }
+ }
+}

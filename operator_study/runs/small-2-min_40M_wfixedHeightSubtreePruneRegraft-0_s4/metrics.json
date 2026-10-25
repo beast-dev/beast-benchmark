@@ -1,0 +1,73 @@
+{
+ "run_id": "small-2-min_40M_wfixedHeightSubtreePruneRegraft-0_s4",
+ "hours": 1.4667977777777776,
+ "samples": 1801,
+ "ess_joint": 746.52249314055,
+ "ess_prior": 796.0250497864321,
+ "ess_likelihood": 1801.0,
+ "ess_rootHeight": 1215.579294129513,
+ "ess_age(root)": 1215.579294129527,
+ "ess_treeLength": 736.397373203642,
+ "ess_constant.popSize": 891.9532727592571,
+ "ess_clock.rate": 834.2503944970157,
+ "ess_meanRate": 834.2503944970163,
+ "ess_treeLikelihood": 1801.0,
+ "ess_branchRates": NaN,
+ "ess_coalescent": 795.6139665401565,
+ "sl_topologyChanged": 0.7481554691837867,
+ "sl_mean_delta": 0.32362581429517734,
+ "ess_min_cont": 736.397373203642,
+ "ess_min_cont_parameter": "treeLength",
+ "ess_rf": 1150.253469230517,
+ "rf_mean": 180.96390893947807,
+ "split_indicators": 50,
+ "ess_split_min": 943.8201574122227,
+ "ess_split_median": 1703.0671102374502,
+ "asdsf": 0.004041831995420671,
+ "max_split_deviation": 0.026374236535258166,
+ "asdsf_x_sqrt_hours": 0.004895120411235615,
+ "eff_min_cont": 502.0442383811734,
+ "mst_min_cont": 18.40993433009105,
+ "eff_rf": 784.1936268632543,
+ "mst_rf": 28.75633673076293,
+ "eff_split_min": 643.4562226035858,
+ "mst_split_min": 23.595503935305565,
+ "sl_accept": 0.234,
+ "sl_tuning": 0.392,
+ "sl_us_per_op": 129.46,
+ "sl_time_fraction": 0.931968668167057,
+ "operators": {
+  "scale(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 0.717,
+   "count": 682717,
+   "time_s": 178.27,
+   "time_per_op_us": 261.12,
+   "accept": 0.2338
+  },
+  "up(nodeHeights(treeModel))/down(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 0.996,
+   "count": 681879,
+   "time_s": 137.41,
+   "time_per_op_us": 201.51,
+   "accept": 0.2338
+  },
+  "subtreeLeap(treeModel)": {
+   "weight": 165.0,
+   "tuning": 0.392,
+   "count": 37552182,
+   "time_s": 4861.54,
+   "time_per_op_us": 129.46,
+   "accept": 0.234
+  },
+  "scale(constant.popSize)": {
+   "weight": 3.0,
+   "tuning": 0.6,
+   "count": 683222,
+   "time_s": 39.2,
+   "time_per_op_us": 57.37,
+   "accept": 0.234
+  }
+ }
+}
