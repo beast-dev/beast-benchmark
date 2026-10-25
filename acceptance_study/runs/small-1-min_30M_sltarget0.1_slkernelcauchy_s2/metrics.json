@@ -1,0 +1,77 @@
+{
+ "run_id": "small-1-min_30M_sltarget0.1_slkernelcauchy_s2",
+ "hours": 1.6365441666666667,
+ "samples": 1801,
+ "ess_joint": 286.11157160184416,
+ "ess_prior": 181.30168379897532,
+ "ess_likelihood": 961.1959120060036,
+ "ess_rootHeight": 195.85474637484768,
+ "ess_age(root)": 195.85474637484768,
+ "ess_treeLength": 184.63021790357368,
+ "ess_constant.popSize": 237.1377782728072,
+ "ess_clock.rate": 184.6519963920869,
+ "ess_meanRate": 184.65199639208686,
+ "ess_treeLikelihood": 961.1959120060036,
+ "ess_branchRates": NaN,
+ "ess_coalescent": 181.09268689389438,
+ "sl_topologyChanged": 0.7417801221543586,
+ "sl_mean_delta": 4712.993936356852,
+ "ess_min_cont": 181.30168379897532,
+ "ess_min_cont_parameter": "prior",
+ "eff_min_cont": 110.78325137307648,
+ "mst_min_cont": 6.0433894599658435,
+ "eff_rf": NaN,
+ "mst_rf": NaN,
+ "eff_split_min": NaN,
+ "mst_split_min": NaN,
+ "sl_accept": 0.1002,
+ "sl_tuning": 123.628,
+ "sl_us_per_op": 197.79,
+ "sl_time_fraction": 0.8229240779121684,
+ "fhspr_accept": 0.0039,
+ "fhspr_tuning": null,
+ "fhspr_us_per_op": 200.93,
+ "fhspr_time_fraction": 0.08362634605403808,
+ "operators": {
+  "scale(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 0.799,
+   "count": 1023144,
+   "time_s": 259.47,
+   "time_per_op_us": 253.6,
+   "accept": 0.234
+  },
+  "up(nodeHeights(treeModel))/down(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 0.877,
+   "count": 1023942,
+   "time_s": 190.88,
+   "time_per_op_us": 186.42,
+   "accept": 0.2345
+  },
+  "subtreeLeap(treeModel)": {
+   "weight": 71.0,
+   "tuning": 123.628,
+   "count": 24209505,
+   "time_s": 4788.48,
+   "time_per_op_us": 197.79,
+   "accept": 0.1002
+  },
+  "fixedHeightSubtreePruneRegraft(treeModel)": {
+   "weight": 7.1,
+   "tuning": null,
+   "count": 2421747,
+   "time_s": 486.61,
+   "time_per_op_us": 200.93,
+   "accept": 0.0039
+  },
+  "scale(constant.popSize)": {
+   "weight": 3.0,
+   "tuning": 0.488,
+   "count": 1021662,
+   "time_s": 93.42,
+   "time_per_op_us": 91.44,
+   "accept": 0.234
+  }
+ }
+}

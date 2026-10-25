@@ -1,0 +1,77 @@
+{
+ "run_id": "tall-1-min_60M_default_s1",
+ "hours": 6.154014166666667,
+ "samples": 1801,
+ "ess_joint": 161.62060360403498,
+ "ess_prior": 141.58270405102314,
+ "ess_likelihood": 145.67721033275686,
+ "ess_rootHeight": 478.71456399964586,
+ "ess_age(root)": 478.7145639996406,
+ "ess_treeLength": 138.70520178411851,
+ "ess_constant.popSize": 190.4739593514216,
+ "ess_clock.rate": 219.48749934387067,
+ "ess_meanRate": 219.48749934387047,
+ "ess_treeLikelihood": 145.67721033275686,
+ "ess_branchRates": NaN,
+ "ess_coalescent": 141.5753888954164,
+ "sl_topologyChanged": 0.7867240421987783,
+ "sl_mean_delta": 0.2941979917380529,
+ "ess_min_cont": 138.70520178411851,
+ "ess_min_cont_parameter": "treeLength",
+ "eff_min_cont": 22.538979928810992,
+ "mst_min_cont": 2.3117533630686418,
+ "eff_rf": NaN,
+ "mst_rf": NaN,
+ "eff_split_min": NaN,
+ "mst_split_min": NaN,
+ "sl_accept": 0.234,
+ "sl_tuning": 0.375,
+ "sl_us_per_op": 356.1,
+ "sl_time_fraction": 0.8737816207402993,
+ "fhspr_accept": 0.0324,
+ "fhspr_tuning": null,
+ "fhspr_us_per_op": 390.83,
+ "fhspr_time_fraction": 0.09585268955079561,
+ "operators": {
+  "scale(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 0.87,
+   "count": 112370,
+   "time_s": 380.54,
+   "time_per_op_us": 3386.52,
+   "accept": 0.2334
+  },
+  "up(nodeHeights(treeModel))/down(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 1.0,
+   "count": 112300,
+   "time_s": 271.73,
+   "time_per_op_us": 2419.68,
+   "accept": 0.2341
+  },
+  "subtreeLeap(treeModel)": {
+   "weight": 1441.0,
+   "tuning": 0.375,
+   "count": 53697160,
+   "time_s": 19121.47,
+   "time_per_op_us": 356.1,
+   "accept": 0.234
+  },
+  "fixedHeightSubtreePruneRegraft(treeModel)": {
+   "weight": 144.1,
+   "tuning": null,
+   "count": 5367052,
+   "time_s": 2097.6,
+   "time_per_op_us": 390.83,
+   "accept": 0.0324
+  },
+  "scale(constant.popSize)": {
+   "weight": 3.0,
+   "tuning": 0.84,
+   "count": 111118,
+   "time_s": 12.24,
+   "time_per_op_us": 110.14,
+   "accept": 0.2326
+  }
+ }
+}

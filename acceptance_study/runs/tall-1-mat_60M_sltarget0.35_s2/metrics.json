@@ -1,0 +1,87 @@
+{
+ "run_id": "tall-1-mat_60M_sltarget0.35_s2",
+ "hours": 2.569815,
+ "samples": 1801,
+ "ess_mat.mutations": 18.982304660375174,
+ "ess_mat.ambiguities": 1204.360739314715,
+ "ess_joint": 137.63891098064883,
+ "ess_prior": 33.07357682757904,
+ "ess_likelihood": 23.97263224302717,
+ "ess_rootHeight": 295.0953253592859,
+ "ess_age(root)": 295.0953253592878,
+ "ess_treeLength": 33.09012360033822,
+ "ess_constant.popSize": 41.225011633479724,
+ "ess_clock.rate": 55.05594677994937,
+ "ess_meanRate": 55.055946779948755,
+ "ess_treeLikelihood": 23.97263224302717,
+ "ess_branchRates": NaN,
+ "ess_coalescent": 33.073388860509326,
+ "sl_topologyChanged": 0.6646635202665188,
+ "sl_mean_delta": 0.16428192943782266,
+ "ess_min_cont": 23.97263224302717,
+ "ess_min_cont_parameter": "likelihood",
+ "eff_min_cont": 9.328543978079033,
+ "mst_min_cont": 0.3995438707171195,
+ "eff_rf": NaN,
+ "mst_rf": NaN,
+ "eff_split_min": NaN,
+ "mst_split_min": NaN,
+ "sl_accept": 0.35,
+ "sl_tuning": 0.213,
+ "sl_us_per_op": 152.04,
+ "sl_time_fraction": 0.8210743217087204,
+ "fhspr_accept": 0.0321,
+ "fhspr_tuning": null,
+ "fhspr_us_per_op": 177.87,
+ "fhspr_time_fraction": 0.09602395910896853,
+ "operators": {
+  "scale(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 0.87,
+   "count": 102515,
+   "time_s": 156.3,
+   "time_per_op_us": 1524.69,
+   "accept": 0.2346
+  },
+  "up(nodeHeights(treeModel))/down(clock.rate)": {
+   "weight": 3.0,
+   "tuning": 1.0,
+   "count": 102057,
+   "time_s": 129.88,
+   "time_per_op_us": 1272.65,
+   "accept": 0.2338
+  },
+  "subtreeLeap(treeModel)": {
+   "weight": 1441.0,
+   "tuning": 0.213,
+   "count": 49243842,
+   "time_s": 7487.27,
+   "time_per_op_us": 152.04,
+   "accept": 0.35
+  },
+  "fixedHeightSubtreePruneRegraft(treeModel)": {
+   "weight": 144.1,
+   "tuning": null,
+   "count": 4922928,
+   "time_s": 875.63,
+   "time_per_op_us": 177.87,
+   "accept": 0.0321
+  },
+  "scale(constant.popSize)": {
+   "weight": 3.0,
+   "tuning": 0.843,
+   "count": 102956,
+   "time_s": 10.13,
+   "time_per_op_us": 98.41,
+   "accept": 0.2337
+  },
+  "mutationHistoryGibbs(treeModel)": {
+   "weight": 144.1,
+   "tuning": null,
+   "count": 4925702,
+   "time_s": 459.66,
+   "time_per_op_us": 93.32,
+   "accept": 1.0
+  }
+ }
+}
