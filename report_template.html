@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BEAST Benchmark Report</title>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --mid: #f0efec;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+  --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s8: #e34948;
+  --div-pos: #1c5cab; --div-neg: #d03b3b;
+  --good: #0ca30c; --critical: #d03b3b; --warning: #fab219;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7;
+    --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+    --border: rgba(255,255,255,0.10); --mid: #383835;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+    --div-pos: #5598e7; --div-neg: #e66767;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7;
+  --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+  --border: rgba(255,255,255,0.10); --mid: #383835;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+  --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+  --div-pos: #5598e7; --div-neg: #e66767;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--page); color: var(--ink);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+main { max-width: 1160px; margin: 0 auto; padding: 32px 16px 64px; }
+header h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
+header p { margin: 0; color: var(--ink-2); }
+.meta { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 24px 0; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.tile .label { font-size: 13px; color: var(--ink-2); }
+.tile .value { font-size: 28px; font-weight: 600; margin-top: 2px; }
+.tile .sub { font-size: 12px; color: var(--muted); }
+.filters {
+  position: sticky; top: 0; z-index: 5; background: var(--page);
+  display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px;
+}
+.filters .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.filters .group > span { font-size: 13px; color: var(--ink-2); margin-right: 2px; }
+.chip {
+  font: inherit; font-size: 13px; padding: 3px 10px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--ink-2);
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+select {
+  font: inherit; font-size: 13px; padding: 3px 6px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--ink);
+}
+section.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 18px 18px 8px; margin-bottom: 20px;
+}
+.card h2 { font-size: 17px; margin: 0 0 2px; }
+.card .desc { font-size: 13px; color: var(--ink-2); margin: 0 0 8px; max-width: 75ch; }
+.card .controls { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--ink-2); margin-bottom: 4px; align-items: center; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+.plot { width: 100%; min-height: 380px; }
+.empty { color: var(--muted); font-size: 14px; padding: 40px 0; text-align: center; }
+.tablewrap { overflow-x: auto; margin-bottom: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { color: var(--ink-2); font-weight: 600; cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--surface); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+th.num { text-align: right; }
+.rt-bar { gap: 8px 10px; }
+.rt-count { margin-left: auto; color: var(--muted); }
+.rt-wrap { max-height: 640px; overflow: auto; border: 1px solid var(--grid); border-radius: 8px; }
+#t-all tbody tr:hover td { background: var(--page); }
+#t-all thead tr:first-child th { top: 0; z-index: 2; }
+#t-all thead tr.rt-filters th { top: 31px; z-index: 2; padding: 4px 6px 6px; cursor: default; }
+#t-all .grip { color: var(--muted); font-size: 10px; margin-right: 5px; cursor: grab; letter-spacing: -2px; }
+#t-all th.dragging { opacity: 0.4; }
+#t-all th.drop { box-shadow: inset 2px 0 0 var(--s1); }
+.rt-filters input {
+  width: 100%; min-width: 64px; font: inherit; font-size: 12px; padding: 2px 6px; border-radius: 5px;
+  border: 1px solid var(--border); background: var(--page); color: var(--ink);
+}
+td.rt-none { color: var(--muted); text-align: center; padding: 24px; }
+.rt-menu { position: relative; }
+.rt-menu summary { list-style: none; display: inline-block; }
+.rt-menu summary::-webkit-details-marker { display: none; }
+#rt-columns {
+  position: absolute; z-index: 10; top: 30px; left: 0; max-height: 340px; overflow: auto; min-width: 220px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12); display: grid; gap: 3px;
+}
+#rt-columns label { white-space: nowrap; color: var(--ink); }
+#rt-columns .derived { color: var(--muted); font-size: 11px; }
+.status { display: inline-flex; gap: 4px; align-items: center; }
+.status .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+footer { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>BEAST benchmark report</h1>
+    <p>Speed of BEAST across benchmark datasets, machines and likelihood engines (BEAGLE vs MAT).</p>
+    <div class="meta">Source: __SOURCE__ · generated __GENERATED__ · <span id="meta-span"></span></div>
+  </header>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="filters" id="filters">
+    <div class="group" id="f-machine"><span>Machine</span></div>
+    <div class="group" id="f-engine"><span>Engine</span></div>
+    <div class="group"><span>Repeated runs</span>
+      <select id="f-repeat">
+        <option value="latest">latest run</option>
+        <option value="best">fastest run</option>
+        <option value="mean">mean</option>
+      </select>
+    </div>
+  </div>
+
+  <section class="card">
+    <h2>Throughput by dataset</h2>
+    <p class="desc">Million MCMC states per hour over the whole chain (chain length ÷ BEAST-reported runtime). Log scale; one bar per machine and engine.</p>
+    <div id="p-throughput" class="plot"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <h2>MAT speed-up over BEAGLE</h2>
+      <p class="desc">MAT throughput ÷ the fastest BEAGLE configuration on the same machine. Above 1× means MAT is faster.</p>
+      <div id="p-speedup" class="plot"></div>
+    </section>
+    <section class="card">
+      <h2>Cost per state vs problem size</h2>
+      <div class="controls">Size measure
+        <select id="c-size">
+          <option value="tp">taxa × patterns</option>
+          <option value="taxa">taxa</option>
+          <option value="patterns">site patterns</option>
+          <option value="sites">sites</option>
+        </select>
+      </div>
+      <p class="desc">Microseconds per MCMC state. BEAGLE cost grows with taxa × patterns; MAT cost tracks the tree and mutation count.</p>
+      <div id="p-scaling" class="plot"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Relative speed across machines and engines</h2>
+    <div class="controls">Baseline
+      <select id="c-baseline"></select>
+    </div>
+    <p class="desc">Each cell is a configuration's throughput relative to the baseline on that dataset. Blue is faster, red slower. The last column is the geometric mean over the datasets both have run.</p>
+    <div id="p-heatmap" class="plot"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <h2>Platform summary</h2>
+      <p class="desc">Geometric-mean speed relative to the baseline above, per configuration, grouped by operating system.</p>
+      <div id="p-platform" class="plot"></div>
+    </section>
+    <section class="card">
+      <h2>Thread scaling (BEAGLE CPU)</h2>
+      <p class="desc">Throughput vs BEAGLE thread count, one line per machine and dataset. Needs runs at more than one thread count to be informative.</p>
+      <div id="p-threads" class="plot"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>History</h2>
+    <div class="controls">Dataset <select id="c-history"></select></div>
+    <p class="desc">Every run of one dataset over time (no de-duplication), for spotting regressions across BEAST versions.</p>
+    <div id="p-history" class="plot"></div>
+  </section>
+
+  <section class="card">
+    <h2>Correctness</h2>
+    <p class="desc">Observed minus expected joint log-density from the benchmark XML header, for the selected runs. The initial state should match exactly; the final state matches only if the chain is bitwise reproducible.</p>
+    <div class="tablewrap"><table id="t-correct"></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Results</h2>
+    <p class="desc">Every run in the CSV, one row each. Click a heading to sort and drag it to move the column.
+      Type in the box under a heading to filter that column. Number columns take <code>&gt;10</code>, <code>&lt;=5</code>, <code>2..8</code> or <code>=18</code>.
+      Text columns match any part of the value, <code>a|b</code> matches either, <code>!x</code> leaves out matches, and <code>empty</code> or <code>!empty</code> filter on blanks.</p>
+    <div class="controls rt-bar">
+      <details class="rt-menu"><summary class="chip">Columns</summary><div id="rt-columns"></div></details>
+      <button class="chip" id="rt-clear">Clear filters</button>
+      <button class="chip" id="rt-reset">Reset layout</button>
+      <button class="chip" id="rt-export">Download CSV</button>
+      <label><input type="checkbox" id="rt-page"> Apply the page filters</label>
+      <span id="rt-count" class="rt-count"></span>
+    </div>
+    <div class="tablewrap rt-wrap"><table id="t-all"></table></div>
+  </section>
+
+  <footer>Rebuild with <code>python3 make_report.py</code> after appending to results.csv.</footer>
+</main>
+
+<script>
+const RAW = /*__DATA__*/[];
+
+const TYPE_ORDER = ['small', 'tall', 'medium', 'big', 'wide'];
+const num = v => { const x = parseFloat(v); return Number.isFinite(x) ? x : null; };
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const fmt = (x, d = 2) => x == null ? '—' : x.toLocaleString(undefined, { maximumFractionDigits: d });
+const fmtX = r => r == null ? '—' : `×${r >= 10 ? r.toFixed(0) : r.toFixed(2)}`;
+const geomean = xs => xs.length ? Math.exp(xs.reduce((a, x) => a + Math.log(x), 0) / xs.length) : null;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function osName(p) {
+  p = p || '';
+  if (/^macOS|darwin/i.test(p)) return 'macOS';
+  if (/^Linux/i.test(p)) return 'Linux';
+  if (/^Windows/i.test(p)) return 'Windows';
+  return p.split('-')[0] || 'unknown';
+}
+
+function engineOf(r) {
+  if (r.model === 'mat') return 'MAT';
+  const res = r.beagle_resource || '';
+  const kind = (!res || /^CPU/i.test(res)) ? 'CPU' : 'GPU';
+  return `BEAGLE ${kind}` + (r.model && r.model !== 'min' ? ` (${r.model})` : '');
+}
+
+const runs = RAW.map((r, i) => {
+  const runtime = num(r.runtime), chain = num(r.chain_length);
+  const taxa = num(r.taxa), patterns = num(r.patterns);
+  const os = osName(r.platform);
+  const machine = `${r.cpu || 'unknown CPU'} · ${os}`;
+  const engine = engineOf(r);
+  return {
+    id: i, raw: r, benchmark: r.benchmark,
+    dataset: `${r.type}-${r.number}`, type: r.type, number: num(r.number), model: r.model,
+    taxa, sites: num(r.sites), patterns, tp: taxa && patterns ? taxa * patterns : null,
+    chain, runtime, wall: num(r.wall_clock_time), rate: num(r.sample_rate),
+    mph: runtime && chain ? (chain / 1e6) / (runtime / 60) : null,
+    usPerState: runtime && chain ? runtime * 60e6 / chain : null,
+    os, machine, engine, config: `${machine} · ${engine}`,
+    threads: num(r.beagle_threads), resource: r.beagle_resource,
+    beast: r.beast_version, beagle: r.beagle_version,
+    ts: new Date((r.timestamp || '').replace(' ', 'T')), timestamp: r.timestamp,
+    initDev: num(r.initial_deviation), finalDev: num(r.final_deviation),
+  };
+}).filter(r => r.mph != null);
+
+const datasetKey = d => { const [t, n] = d.split('-'); const ti = TYPE_ORDER.indexOf(t); return [ti < 0 ? 99 : ti, t, +n]; };
+const cmpDataset = (a, b) => { const x = datasetKey(a), y = datasetKey(b); return x[0] - y[0] || x[1].localeCompare(y[1]) || x[2] - y[2]; };
+const uniq = xs => [...new Set(xs)];
+
+const ALL_MACHINES = uniq(runs.map(r => r.machine)).sort();
+const ENGINE_ORDER = ['MAT', 'BEAGLE CPU', 'BEAGLE GPU'];
+const ALL_ENGINES = uniq(runs.map(r => r.engine)).sort((a, b) => {
+  const ia = ENGINE_ORDER.indexOf(a), ib = ENGINE_ORDER.indexOf(b);
+  return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b);
+});
+// Configurations ordered by machine, then engine; colour slot is fixed per entity
+const ALL_CONFIGS = uniq(runs.map(r => r.config)).sort((a, b) => {
+  const ra = runs.find(r => r.config === a), rb = runs.find(r => r.config === b);
+  return ALL_MACHINES.indexOf(ra.machine) - ALL_MACHINES.indexOf(rb.machine) ||
+         ALL_ENGINES.indexOf(ra.engine) - ALL_ENGINES.indexOf(rb.engine);
+});
+const ALL_DATASETS = uniq(runs.map(r => r.dataset)).sort(cmpDataset);
+
+const slot = i => i < 8 ? css(`--s${i + 1}`) : css('--muted');
+const configColor = c => slot(ALL_CONFIGS.indexOf(c));
+const engineColor = e => slot(ALL_ENGINES.indexOf(e));
+const SYMBOLS = ['circle', 'diamond', 'square', 'triangle-up', 'x', 'star', 'hexagon', 'cross'];
+const machineSymbol = m => SYMBOLS[ALL_MACHINES.indexOf(m) % SYMBOLS.length];
+
+// ---- filter state ---------------------------------------------------------
+const state = { machines: new Set(ALL_MACHINES), engines: new Set(ALL_ENGINES), repeat: 'latest' };
+
+function makeChips(containerId, values, set) {
+  const el = document.getElementById(containerId);
+  values.forEach(v => {
+    const b = document.createElement('button');
+    b.className = 'chip'; b.textContent = v; b.setAttribute('aria-pressed', 'true');
+    b.onclick = () => {
+      if (set.has(v)) { if (set.size > 1) set.delete(v); } else set.add(v);
+      b.setAttribute('aria-pressed', set.has(v));
+      renderAll();
+    };
+    el.appendChild(b);
+  });
+}
+makeChips('f-machine', ALL_MACHINES, state.machines);
+makeChips('f-engine', ALL_ENGINES, state.engines);
+document.getElementById('f-repeat').onchange = e => { state.repeat = e.target.value; renderAll(); };
+
+const filteredRuns = () => runs.filter(r => state.machines.has(r.machine) && state.engines.has(r.engine));
+
+// One record per dataset × configuration, combining repeated runs
+function collapsed() {
+  const groups = new Map();
+  filteredRuns().forEach(r => {
+    const k = r.dataset + '|' + r.config;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(r);
+  });
+  return [...groups.values()].map(g => {
+    g.sort((a, b) => b.ts - a.ts);
+    if (state.repeat === 'latest') return { ...g[0], n: g.length };
+    if (state.repeat === 'best') return { ...g.reduce((a, b) => b.mph > a.mph ? b : a), n: g.length };
+    const mph = g.reduce((a, r) => a + r.mph, 0) / g.length;
+    return { ...g[0], mph, usPerState: 3.6e9 / (mph * 1e6), n: g.length };
+  });
+}
+
+// ---- plot helpers ---------------------------------------------------------
+function baseLayout(extra = {}) {
+  const axis = {
+    gridcolor: css('--grid'), linecolor: css('--axis'), zerolinecolor: css('--axis'),
+    tickfont: { color: css('--muted'), size: 12 }, title: { font: { color: css('--ink-2'), size: 13 } },
+    automargin: true,
+  };
+  return Object.assign({
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: css('--ink'), size: 13 },
+    margin: { l: 56, r: 16, t: 16, b: 48 },
+    hoverlabel: { bgcolor: css('--surface'), bordercolor: css('--border'), font: { color: css('--ink') } },
+    legend: { orientation: 'h', y: -0.18, font: { color: css('--ink-2'), size: 12 } },
+    xaxis: { ...axis }, yaxis: { ...axis },
+    bargap: 0.25, bargroupgap: 0.08,
+  }, extra, {
+    xaxis: Object.assign({ ...axis }, extra.xaxis || {}),
+    yaxis: Object.assign({ ...axis }, extra.yaxis || {}),
+  });
+}
+const PCONFIG = { responsive: true, displaylogo: false, modeBarButtonsToRemove: ['lasso2d', 'select2d'] };
+function plot(id, traces, layout) {
+  const el = document.getElementById(id);
+  if (!traces.length) { Plotly.purge(el); el.innerHTML = '<div class="empty">No data for the current selection.</div>'; return; }
+  el.innerHTML = '';
+  Plotly.react(el, traces, layout, PCONFIG);
+}
+const refLine1 = (axis = 'y') => ({
+  type: 'line', xref: axis === 'y' ? 'paper' : 'x', yref: axis === 'y' ? 'y' : 'paper',
+  ...(axis === 'y' ? { x0: 0, x1: 1, y0: 1, y1: 1 } : { y0: 0, y1: 1, x0: 1, x1: 1 }),
+  line: { color: css('--muted'), width: 1, dash: 'dot' },
+});
+
+// ---- charts ---------------------------------------------------------------
+function renderTiles(rows) {
+  const ratios = speedups(rows).map(s => s.ratio);
+  const tiles = [
+    ['Runs', filteredRuns().length, `of ${runs.length} in the CSV`],
+    ['Machines', uniq(rows.map(r => r.machine)).length, uniq(rows.map(r => r.os)).join(', ')],
+    ['Datasets', uniq(rows.map(r => r.dataset)).length, `${uniq(rows.map(r => r.engine)).length} engines`],
+    ['MAT vs BEAGLE', ratios.length ? fmtX(geomean(ratios)) : '—',
+      ratios.length ? `geometric mean; range ${fmtX(Math.min(...ratios))}–${fmtX(Math.max(...ratios))}` : 'needs both engines on one machine'],
+  ];
+  document.getElementById('tiles').innerHTML = tiles.map(([l, v, s]) =>
+    `<div class="tile"><div class="label">${l}</div><div class="value">${v}</div><div class="sub">${esc(s)}</div></div>`).join('');
+}
+
+function renderThroughput(rows) {
+  const datasets = ALL_DATASETS.filter(d => rows.some(r => r.dataset === d));
+  const traces = ALL_CONFIGS.filter(c => rows.some(r => r.config === c)).map(c => {
+    const rs = datasets.map(d => rows.find(r => r.config === c && r.dataset === d) || null);
+    return {
+      type: 'bar', name: c, x: datasets, y: rs.map(r => r && r.mph),
+      marker: { color: configColor(c), line: { color: css('--surface'), width: 1 } },
+      customdata: rs.map(r => r ? [r.runtime, r.chain / 1e6, r.threads ?? '—', r.beast, r.n, r.taxa, r.patterns] : []),
+      hovertemplate: `<b>%{x}</b> · ${esc(c)}<br>%{y:.3~g} M states/h<br>runtime %{customdata[0]:.2f} min for %{customdata[1]:.3~g} M states` +
+        `<br>%{customdata[5]} taxa, %{customdata[6]} patterns<br>threads %{customdata[2]} · BEAST %{customdata[3]} · runs %{customdata[4]}<extra></extra>`,
+    };
+  });
+  plot('p-throughput', traces, baseLayout({
+    barmode: 'group', height: 420,
+    yaxis: { type: 'log', title: { text: 'M states / hour' } },
+    xaxis: { type: 'category', categoryorder: 'array', categoryarray: datasets },
+  }));
+}
+
+function speedups(rows) {
+  const out = [];
+  uniq(rows.map(r => r.machine)).forEach(m => {
+    uniq(rows.map(r => r.dataset)).forEach(d => {
+      const here = rows.filter(r => r.machine === m && r.dataset === d);
+      const mat = here.find(r => r.engine === 'MAT');
+      const beagle = here.filter(r => r.engine.startsWith('BEAGLE')).sort((a, b) => b.mph - a.mph)[0];
+      if (mat && beagle) out.push({ machine: m, dataset: d, ratio: mat.mph / beagle.mph, mat, beagle });
+    });
+  });
+  return out;
+}
+
+function renderSpeedup(rows) {
+  const sp = speedups(rows);
+  const datasets = ALL_DATASETS.filter(d => sp.some(s => s.dataset === d));
+  const machines = ALL_MACHINES.filter(m => sp.some(s => s.machine === m));
+  const traces = machines.map((m, i) => {
+    const ss = datasets.map(d => sp.find(s => s.machine === m && s.dataset === d) || null);
+    return {
+      type: 'bar', name: m, x: datasets, y: ss.map(s => s && s.ratio),
+      marker: { color: slot(ALL_MACHINES.indexOf(m)), line: { color: css('--surface'), width: 1 } },
+      text: machines.length <= 2 ? ss.map(s => s ? fmtX(s.ratio) : '') : undefined,
+      textposition: 'outside', textfont: { color: css('--ink-2'), size: 12 }, cliponaxis: false,
+      customdata: ss.map(s => s ? [s.mat.mph, s.beagle.mph, s.beagle.engine] : []),
+      hovertemplate: `<b>%{x}</b> · ${esc(m)}<br>MAT is ×%{y:.2f} vs %{customdata[2]}` +
+        `<br>MAT %{customdata[0]:.3~g} vs BEAGLE %{customdata[1]:.3~g} M states/h<extra></extra>`,
+    };
+  });
+  plot('p-speedup', traces, baseLayout({
+    barmode: 'group', height: 400, showlegend: machines.length > 1,
+    yaxis: { type: 'log', title: { text: 'speed-up (×)' } },
+    xaxis: { type: 'category', categoryorder: 'array', categoryarray: datasets },
+    shapes: [refLine1('y')],
+  }));
+}
+
+function renderScaling(rows) {
+  const sizeKey = document.getElementById('c-size').value;
+  const sizeLabel = document.getElementById('c-size').selectedOptions[0].text;
+  const traces = [];
+  ALL_ENGINES.filter(e => rows.some(r => r.engine === e)).forEach(e => {
+    ALL_MACHINES.filter(m => rows.some(r => r.engine === e && r.machine === m)).forEach(m => {
+      const rs = rows.filter(r => r.engine === e && r.machine === m && r[sizeKey] != null)
+                     .sort((a, b) => a[sizeKey] - b[sizeKey]);
+      traces.push({
+        type: 'scatter', mode: 'markers', name: ALL_MACHINES.length > 1 ? `${e} · ${m}` : e,
+        legendgroup: e, x: rs.map(r => r[sizeKey]), y: rs.map(r => r.usPerState),
+        marker: { color: engineColor(e), symbol: machineSymbol(m), size: 11, line: { color: css('--surface'), width: 2 } },
+        customdata: rs.map(r => [r.dataset, r.taxa, r.patterns, r.mph]),
+        hovertemplate: `<b>%{customdata[0]}</b> · ${esc(e)}<br>${esc(m)}<br>%{y:.3~g} µs / state` +
+          `<br>%{customdata[1]} taxa, %{customdata[2]} patterns<extra></extra>`,
+      });
+    });
+  });
+  plot('p-scaling', traces, baseLayout({
+    height: 400,
+    xaxis: { type: 'log', title: { text: sizeLabel } },
+    yaxis: { type: 'log', title: { text: 'µs per state' } },
+  }));
+}
+
+function fillBaselineSelect(rows) {
+  const sel = document.getElementById('c-baseline');
+  const prev = sel.value;
+  const configs = ALL_CONFIGS.filter(c => rows.some(r => r.config === c));
+  sel.innerHTML = configs.map(c => `<option>${esc(c)}</option>`).join('');
+  // Default baseline: a BEAGLE CPU configuration, the conventional reference
+  sel.value = configs.includes(prev) ? prev : (configs.find(c => c.endsWith('BEAGLE CPU')) || configs[0] || '');
+}
+
+function relativeTable(rows) {
+  const base = document.getElementById('c-baseline').value;
+  const datasets = ALL_DATASETS.filter(d => rows.some(r => r.dataset === d));
+  const configs = ALL_CONFIGS.filter(c => rows.some(r => r.config === c));
+  const baseBy = Object.fromEntries(rows.filter(r => r.config === base).map(r => [r.dataset, r]));
+  return { base, datasets, configs, rel: configs.map(c => {
+    const cells = datasets.map(d => {
+      const r = rows.find(x => x.config === c && x.dataset === d);
+      return r && baseBy[d] ? r.mph / baseBy[d].mph : null;
+    });
+    return { config: c, cells, gm: geomean(cells.filter(x => x != null)) };
+  }) };
+}
+
+function renderHeatmap(rows) {
+  const { base, datasets, rel } = relativeTable(rows);
+  if (!rel.length) return plot('p-heatmap', [], {});
+  const cols = [...datasets, 'geo-mean'];
+  const z = rel.map(r => [...r.cells, r.gm].map(x => x == null ? null : Math.log2(x)));
+  const text = rel.map(r => [...r.cells, r.gm].map(x => x == null ? '' : fmtX(x)));
+  const zmax = Math.max(1, ...z.flat().filter(x => x != null).map(Math.abs));
+  const traces = [{
+    type: 'heatmap', x: cols, y: rel.map(r => r.config), z, text, texttemplate: '%{text}',
+    textfont: { size: 12, color: css('--ink') }, xgap: 2, ygap: 2,
+    zmin: -zmax, zmax, zmid: 0,
+    colorscale: [[0, css('--div-neg')], [0.5, css('--mid')], [1, css('--div-pos')]],
+    colorbar: {
+      title: { text: `vs baseline`, font: { color: css('--ink-2'), size: 12 } },
+      tickvals: [-3, -2, -1, 0, 1, 2, 3].filter(v => Math.abs(v) <= zmax),
+      ticktext: ['÷8', '÷4', '÷2', '×1', '×2', '×4', '×8'].filter((_, i) => Math.abs(i - 3) <= zmax),
+      tickfont: { color: css('--muted') }, outlinewidth: 0, thickness: 12,
+    },
+    hovertemplate: `<b>%{y}</b><br>%{x}: %{text} vs ${esc(base)}<extra></extra>`,
+  }];
+  plot('p-heatmap', traces, baseLayout({
+    height: Math.max(220, 70 + 46 * rel.length),
+    margin: { l: 10, r: 10, t: 10, b: 40 },
+    xaxis: { type: 'category', showgrid: false, side: 'bottom' },
+    yaxis: { type: 'category', showgrid: false, autorange: 'reversed' },
+  }));
+}
+
+function renderPlatform(rows) {
+  const { base, rel } = relativeTable(rows);
+  const items = rel.filter(r => r.gm != null).map(r => ({ ...r, run: rows.find(x => x.config === r.config) }));
+  const traces = ALL_ENGINES.filter(e => items.some(i => i.run.engine === e)).map(e => {
+    const its = items.filter(i => i.run.engine === e);
+    return {
+      type: 'bar', orientation: 'h', name: e,
+      y: [its.map(i => i.run.os), its.map(i => i.run.machine)], x: its.map(i => i.gm),
+      marker: { color: engineColor(e), line: { color: css('--surface'), width: 1 } },
+      text: its.map(i => fmtX(i.gm)), textposition: 'outside', textfont: { color: css('--ink-2'), size: 12 }, cliponaxis: false,
+      hovertemplate: `<b>%{y}</b> · ${esc(e)}<br>%{text} vs ${esc(base)}<extra></extra>`,
+    };
+  });
+  plot('p-platform', traces, baseLayout({
+    barmode: 'group', height: Math.max(260, 120 + 50 * items.length),
+    xaxis: { type: 'log', title: { text: 'geo-mean speed vs baseline' } },
+    yaxis: { autorange: 'reversed' },
+    shapes: [refLine1('x')],
+  }));
+}
+
+function renderThreads(rows) {
+  // Uses every filtered BEAGLE CPU run, since thread sweeps are repeated runs of one configuration
+  const rs = filteredRuns().filter(r => r.engine === 'BEAGLE CPU' && r.threads != null);
+  const traces = [];
+  ALL_MACHINES.filter(m => rs.some(r => r.machine === m)).forEach(m => {
+    ALL_DATASETS.filter(d => rs.some(r => r.machine === m && r.dataset === d)).forEach(d => {
+      const byT = new Map();
+      rs.filter(r => r.machine === m && r.dataset === d).forEach(r => {
+        if (!byT.has(r.threads) || r.mph > byT.get(r.threads).mph) byT.set(r.threads, r);
+      });
+      const pts = [...byT.values()].sort((a, b) => a.threads - b.threads);
+      traces.push({
+        type: 'scatter', mode: 'lines+markers', name: ALL_MACHINES.length > 1 ? `${d} · ${m}` : d,
+        x: pts.map(p => p.threads), y: pts.map(p => p.mph),
+        line: { width: 2, color: slot(ALL_DATASETS.indexOf(d)) },
+        marker: { size: 9, symbol: machineSymbol(m), color: slot(ALL_DATASETS.indexOf(d)), line: { color: css('--surface'), width: 2 } },
+        hovertemplate: `<b>${esc(d)}</b> · ${esc(m)}<br>%{x} threads: %{y:.3~g} M states/h<extra></extra>`,
+      });
+    });
+  });
+  plot('p-threads', traces, baseLayout({
+    height: 400,
+    xaxis: { type: 'log', title: { text: 'BEAGLE threads' }, dtick: Math.log10(2) },
+    yaxis: { type: 'log', title: { text: 'M states / hour' } },
+  }));
+}
+
+function fillHistorySelect() {
+  const sel = document.getElementById('c-history');
+  // Default to the dataset with the most runs
+  const counts = ALL_DATASETS.map(d => [d, runs.filter(r => r.dataset === d).length]);
+  sel.innerHTML = ALL_DATASETS.map(d => `<option>${d}</option>`).join('');
+  sel.value = counts.sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
+}
+
+function renderHistory() {
+  const d = document.getElementById('c-history').value;
+  const rs = filteredRuns().filter(r => r.dataset === d).sort((a, b) => a.ts - b.ts);
+  const traces = ALL_CONFIGS.filter(c => rs.some(r => r.config === c)).map(c => {
+    const pts = rs.filter(r => r.config === c);
+    return {
+      type: 'scatter', mode: 'lines+markers', name: c, x: pts.map(r => r.ts), y: pts.map(r => r.mph),
+      line: { width: 2, color: configColor(c) },
+      marker: { size: 9, color: configColor(c), line: { color: css('--surface'), width: 2 } },
+      customdata: pts.map(r => [r.beast, r.threads ?? '—']),
+      hovertemplate: `${esc(c)}<br>%{x|%Y-%m-%d %H:%M}<br>%{y:.3~g} M states/h<br>BEAST %{customdata[0]} · threads %{customdata[1]}<extra></extra>`,
+    };
+  });
+  plot('p-history', traces, baseLayout({
+    height: 340,
+    xaxis: { type: 'date', title: { text: 'run date' } },
+    yaxis: { type: 'log', title: { text: 'M states / hour' } },
+  }));
+}
+
+function statusCell(dev) {
+  if (dev == null) return `<span class="status"><span class="dot" style="background:var(--muted)"></span>no reference</span>`;
+  const ok = Math.abs(dev) < 1e-3;
+  return `<span class="status"><span class="dot" style="background:var(${ok ? '--good' : '--critical'})"></span>${ok ? '✓ match' : '✗ ' + fmt(dev, 4)}</span>`;
+}
+
+function renderCorrectness(rows) {
+  const rs = [...rows].sort((a, b) => cmpDataset(a.dataset, b.dataset) || ALL_CONFIGS.indexOf(a.config) - ALL_CONFIGS.indexOf(b.config));
+  document.getElementById('t-correct').innerHTML =
+    '<thead><tr><th>Dataset</th><th>Configuration</th><th>Initial joint</th><th>Final joint</th><th>BEAST</th><th>Date</th></tr></thead><tbody>' +
+    rs.map(r => `<tr><td>${esc(r.dataset)}</td><td>${esc(r.config)}</td><td>${statusCell(r.initDev)}</td><td>${statusCell(r.finalDev)}</td>` +
+      `<td>${esc(r.beast)}</td><td>${esc(r.timestamp)}</td></tr>`).join('') + '</tbody>';
+}
+
+// ---- results table: reorder (drag headings), sort, filter, show/hide -------
+// Derived columns first, then every column of the CSV as written by benchmark.py
+const DERIVED_COLS = [
+  { key: 'dataset', label: 'dataset', get: r => r.dataset },
+  { key: 'machine', label: 'machine', get: r => r.machine },
+  { key: 'os', label: 'OS', get: r => r.os },
+  { key: 'engine', label: 'engine', get: r => r.engine },
+  { key: 'mph', label: 'M states/h', get: r => r.mph, num: true },
+  { key: 'usPerState', label: 'µs/state', get: r => r.usPerState, num: true },
+];
+const CSV_KEYS = RAW.length ? Object.keys(RAW[0]) : [];
+const RT_COLS = [...DERIVED_COLS, ...CSV_KEYS.map(k => {
+  const isNum = RAW.every(r => r[k] === '' || r[k] == null || Number.isFinite(+r[k]));
+  return { key: 'csv:' + k, label: k, get: r => isNum ? num(r.raw[k]) : (r.raw[k] ?? ''), num: isNum };
+})];
+const RT_DEFAULT_VISIBLE = ['csv:benchmark', 'machine', 'engine', 'csv:beagle_threads', 'csv:taxa', 'csv:patterns',
+  'csv:chain_length', 'csv:runtime', 'mph', 'csv:sample_rate', 'csv:final_deviation', 'csv:beast_version', 'csv:timestamp'];
+const RT_STORE = 'beast-benchmark-results-table';
+const RT_DEFAULT_ORDER = [...RT_DEFAULT_VISIBLE, ...RT_COLS.map(c => c.key).filter(k => !RT_DEFAULT_VISIBLE.includes(k))];
+
+const rt = {
+  order: [...RT_DEFAULT_ORDER],
+  hidden: new Set(RT_COLS.map(c => c.key).filter(k => !RT_DEFAULT_VISIBLE.includes(k))),
+  sort: { key: 'csv:timestamp', dir: -1 },
+  filters: {},
+  pageFilters: false,
+};
+// Column order, visibility and sort persist per viewer; filters do not
+try {
+  const saved = JSON.parse(localStorage.getItem(RT_STORE) || 'null');
+  if (saved) {
+    const known = new Set(rt.order);
+    const order = saved.order.filter(k => known.has(k));
+    rt.order = [...order, ...rt.order.filter(k => !order.includes(k))];
+    rt.hidden = new Set(saved.hidden.filter(k => known.has(k)));
+    if (known.has(saved.sort?.key)) rt.sort = saved.sort;
+  }
+} catch (e) { /* storage unavailable */ }
+function rtSave() {
+  try { localStorage.setItem(RT_STORE, JSON.stringify({ order: rt.order, hidden: [...rt.hidden], sort: rt.sort })); } catch (e) {}
+}
+const rtCol = k => RT_COLS.find(c => c.key === k);
+const rtVisible = () => rt.order.filter(k => !rt.hidden.has(k)).map(rtCol);
+
+// Numeric filters: "> 10", "<=5", "2..8", "=18", or a plain number (equality); text filters:
+// case-insensitive substring, "!" prefix to exclude, "|" for alternatives. "empty" / "!empty" match blanks.
+function rtMatch(col, value, expr) {
+  expr = expr.trim();
+  if (!expr) return true;
+  if (/^!?empty$/i.test(expr)) {
+    const blank = value == null || value === '';
+    return expr.startsWith('!') ? !blank : blank;
+  }
+  if (col.num) {
+    let m;
+    if (value == null) return false;
+    if ((m = expr.match(/^(-?[\d.eE+-]+)\s*\.\.\s*(-?[\d.eE+-]+)$/))) return value >= +m[1] && value <= +m[2];
+    if ((m = expr.match(/^(>=|<=|>|<|=|!=)\s*(-?[\d.eE+-]+)$/))) {
+      const x = +m[2];
+      return { '>=': value >= x, '<=': value <= x, '>': value > x, '<': value < x, '=': value === x, '!=': value !== x }[m[1]];
+    }
+    if (Number.isFinite(+expr)) return value === +expr;
+  }
+  const neg = expr.startsWith('!');
+  const s = String(value ?? '').toLowerCase();
+  const hit = (neg ? expr.slice(1) : expr).toLowerCase().split('|').some(p => s.includes(p.trim()));
+  return neg ? !hit : hit;
+}
+
+function rtRows() {
+  const base = rt.pageFilters ? filteredRuns() : runs;
+  const cols = Object.entries(rt.filters).filter(([, v]) => v.trim()).map(([k, v]) => [rtCol(k), v]);
+  const rows = base.filter(r => cols.every(([c, v]) => rtMatch(c, c.get(r), v)));
+  const c = rtCol(rt.sort.key), d = rt.sort.dir;
+  return rows.sort((a, b) => {
+    const x = c.get(a), y = c.get(b);
+    const xe = x == null || x === '', ye = y == null || y === '';
+    if (xe || ye) return xe - ye; // blanks last in either direction
+    if (c.key === 'dataset') return d * cmpDataset(x, y);
+    return d * (c.num ? x - y : String(x).localeCompare(String(y), undefined, { numeric: true }));
+  });
+}
+
+const rtCell = (c, r) => {
+  const v = c.get(r);
+  if (c.num) return `<td class="num">${v == null ? '' : fmt(v, Math.abs(v) >= 100 ? 1 : 4)}</td>`;
+  return `<td>${esc(v)}</td>`;
+};
+
+function rtRenderBody() {
+  const rows = rtRows(), cols = rtVisible();
+  document.querySelector('#t-all tbody').innerHTML = rows.length
+    ? rows.map(r => '<tr>' + cols.map(c => rtCell(c, r)).join('') + '</tr>').join('')
+    : `<tr><td class="rt-none" colspan="${cols.length}">No runs match these filters.</td></tr>`;
+  document.getElementById('rt-count').textContent =
+    `${rows.length} of ${rt.pageFilters ? filteredRuns().length : runs.length} runs`;
+}
+
+let rtDragKey = null;
+function renderAllTable() {
+  const cols = rtVisible();
+  const t = document.getElementById('t-all');
+  t.innerHTML = '<thead><tr>' + cols.map(c => {
+    const s = rt.sort.key === c.key ? (rt.sort.dir > 0 ? ' ▲' : ' ▼') : '';
+    return `<th draggable="true" data-k="${c.key}" class="${c.num ? 'num' : ''}" title="Click to sort, drag to move">` +
+      `<span class="grip">⋮⋮</span>${esc(c.label)}${s}</th>`;
+  }).join('') + '</tr><tr class="rt-filters">' + cols.map(c =>
+    `<th><input data-k="${c.key}" value="${esc(rt.filters[c.key] || '')}" placeholder="${c.num ? '>, <, a..b' : 'filter'}" aria-label="Filter ${esc(c.label)}"></th>`
+  ).join('') + '</tr></thead><tbody></tbody>';
+
+  t.querySelectorAll('thead tr:first-child th').forEach(th => {
+    const k = th.dataset.k;
+    th.onclick = () => {
+      rt.sort = rt.sort.key === k ? { key: k, dir: -rt.sort.dir } : { key: k, dir: 1 };
+      rtSave(); renderAllTable();
+    };
+    th.ondragstart = e => { rtDragKey = k; th.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', k); };
+    th.ondragend = () => { rtDragKey = null; th.classList.remove('dragging'); };
+    th.ondragover = e => { if (rtDragKey && rtDragKey !== k) { e.preventDefault(); th.classList.add('drop'); } };
+    th.ondragleave = () => th.classList.remove('drop');
+    th.ondrop = e => {
+      e.preventDefault(); th.classList.remove('drop');
+      if (!rtDragKey || rtDragKey === k) return;
+      const from = rt.order.indexOf(rtDragKey);
+      rt.order.splice(from, 1);
+      // Dropping on the right half of a heading places the column after it
+      const after = e.offsetX > th.offsetWidth / 2;
+      rt.order.splice(rt.order.indexOf(k) + (after ? 1 : 0), 0, rtDragKey);
+      rtSave(); renderAllTable();
+    };
+  });
+  t.querySelectorAll('.rt-filters input').forEach(inp => inp.oninput = () => {
+    rt.filters[inp.dataset.k] = inp.value;
+    rtRenderBody();
+  });
+  rtRenderColumnMenu();
+  rtRenderBody();
+}
+
+function rtRenderColumnMenu() {
+  document.getElementById('rt-columns').innerHTML = rt.order.map(k => {
+    const c = rtCol(k);
+    return `<label><input type="checkbox" data-k="${k}" ${rt.hidden.has(k) ? '' : 'checked'}> ${esc(c.label)}` +
+      `${k.startsWith('csv:') ? '' : ' <span class="derived">derived</span>'}</label>`;
+  }).join('');
+  document.querySelectorAll('#rt-columns input').forEach(cb => cb.onchange = () => {
+    if (cb.checked) rt.hidden.delete(cb.dataset.k);
+    else if (rtVisible().length > 1) { rt.hidden.add(cb.dataset.k); delete rt.filters[cb.dataset.k]; }
+    else cb.checked = true;
+    rtSave(); renderAllTable();
+  });
+}
+
+function rtExport() {
+  const cols = rtVisible();
+  const q = v => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const csv = [cols.map(c => q(c.label)).join(','), ...rtRows().map(r => cols.map(c => q(c.get(r))).join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = 'benchmark-results-filtered.csv';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+document.getElementById('rt-page').onchange = e => { rt.pageFilters = e.target.checked; rtRenderBody(); };
+document.getElementById('rt-clear').onclick = () => { rt.filters = {}; renderAllTable(); };
+document.getElementById('rt-reset').onclick = () => {
+  rt.order = [...RT_DEFAULT_ORDER];
+  rt.hidden = new Set(RT_COLS.map(c => c.key).filter(k => !RT_DEFAULT_VISIBLE.includes(k)));
+  rt.sort = { key: 'csv:timestamp', dir: -1 };
+  rt.filters = {};
+  rtSave(); renderAllTable();
+};
+document.getElementById('rt-export').onclick = rtExport;
+
+function renderAll() {
+  const rows = collapsed();
+  fillBaselineSelect(rows);
+  renderTiles(rows);
+  renderThroughput(rows);
+  renderSpeedup(rows);
+  renderScaling(rows);
+  renderHeatmap(rows);
+  renderPlatform(rows);
+  renderThreads(rows);
+  renderHistory();
+  renderCorrectness(rows);
+  renderAllTable();
+}
+
+document.getElementById('meta-span').textContent =
+  `${runs.length} runs, ${ALL_DATASETS.length} datasets, ${ALL_MACHINES.length} machine${ALL_MACHINES.length === 1 ? '' : 's'}`;
+fillHistorySelect();
+document.getElementById('c-size').onchange = () => renderScaling(collapsed());
+document.getElementById('c-baseline').onchange = () => { const rows = collapsed(); renderHeatmap(rows); renderPlatform(rows); };
+document.getElementById('c-history').onchange = renderHistory;
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderAll);
+renderAll();
+</script>
+</body>
+</html>
