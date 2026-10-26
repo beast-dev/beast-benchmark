@@ -240,11 +240,14 @@ function osName(p) {
   return p.split('-')[0] || 'unknown';
 }
 
+// Model labels are min / mat for the base model and <variant> / <variant>-mat (e.g. gamma, skygrid-mat)
+const isMat = model => model === 'mat' || /-mat$/.test(model || '');
+const variantOf = model => (model || '').replace(/-?mat$/, '').replace(/^min$/, '');
+
 function engineOf(r) {
-  if (r.model === 'mat') return 'MAT';
+  if (isMat(r.model)) return 'MAT';
   const res = r.beagle_resource || '';
-  const kind = (!res || /^CPU/i.test(res)) ? 'CPU' : 'GPU';
-  return `BEAGLE ${kind}` + (r.model && r.model !== 'min' ? ` (${r.model})` : '');
+  return (!res || /^CPU/i.test(res)) ? 'BEAGLE CPU' : 'BEAGLE GPU';
 }
 
 const runs = RAW.map((r, i) => {
@@ -255,7 +258,8 @@ const runs = RAW.map((r, i) => {
   const engine = engineOf(r);
   return {
     id: i, raw: r, benchmark: r.benchmark,
-    dataset: `${r.type}-${r.number}`, type: r.type, number: num(r.number), model: r.model,
+    dataset: `${r.type}-${r.number}` + (variantOf(r.model) ? `-${variantOf(r.model)}` : ''),
+    type: r.type, number: num(r.number), model: r.model, variant: variantOf(r.model),
     taxa, sites: num(r.sites), patterns, tp: taxa && patterns ? taxa * patterns : null,
     chain, runtime, wall: num(r.wall_clock_time), rate: num(r.sample_rate),
     mph: runtime && chain ? (chain / 1e6) / (runtime / 60) : null,
@@ -268,8 +272,9 @@ const runs = RAW.map((r, i) => {
   };
 }).filter(r => r.mph != null);
 
-const datasetKey = d => { const [t, n] = d.split('-'); const ti = TYPE_ORDER.indexOf(t); return [ti < 0 ? 99 : ti, t, +n]; };
-const cmpDataset = (a, b) => { const x = datasetKey(a), y = datasetKey(b); return x[0] - y[0] || x[1].localeCompare(y[1]) || x[2] - y[2]; };
+// Datasets order by type, number, then model variant (base model first)
+const datasetKey = d => { const [t, n, ...v] = d.split('-'); const ti = TYPE_ORDER.indexOf(t); return [ti < 0 ? 99 : ti, t, +n, v.join('-')]; };
+const cmpDataset = (a, b) => { const x = datasetKey(a), y = datasetKey(b); return x[0] - y[0] || x[1].localeCompare(y[1]) || x[2] - y[2] || x[3].localeCompare(y[3]); };
 const uniq = xs => [...new Set(xs)];
 
 const ALL_MACHINES = uniq(runs.map(r => r.machine)).sort();

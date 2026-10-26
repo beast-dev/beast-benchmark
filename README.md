@@ -63,6 +63,33 @@ benchmark-{type}-{number}-{model}.xml
 | `number` | Dataset index within a type (1, 2, …) |
 | `model`  | Model label — e.g. `min` for the minimum/baseline model configuration |
 
+Model labels in use:
+
+| `model` | Likelihood | Model |
+| --- | --- | --- |
+| `min` / `mat` | BEAGLE / MAT | the base model: strict clock, constant-size coalescent |
+| `gamma` / `gamma-mat` | BEAGLE / MAT | the base model plus a 4-category discrete gamma site rate model |
+| `skygrid` / `skygrid-mat` | BEAGLE / MAT | the base model with a Bayesian skygrid in place of the constant-size coalescent |
+
+### Model variants
+
+The `gamma` and `skygrid` XMLs are generated from each dataset's `min` and `mat` XMLs by `make_variants.py`:
+
+```bash
+python3 make_variants.py --beast "java -Djava.library.path=/opt/homebrew/lib -cp beast.jar dr.app.beast.BeastMain"
+```
+
+- **gamma:** the shape `alpha` has an Exponential(mean 0.5) prior and a scale operator (weight 3). The MAT
+  version also samples each variable site's rate category with a `siteRateCategoryGibbsOperator` at 1% of
+  the SubtreeLeap weight.
+- **skygrid:** about one grid interval per 20 coalescent events (taxa − 1), at least 10 and at most 100.
+  The cut-off is the 97.5% quantile of the root height from earlier BEAGLE and MAT runs, rounded up to 2
+  significant figures (see `CUT_OFFS` in the script). The constant-size model is kept only to simulate the
+  starting tree.
+
+With `--beast`, the script runs each XML to state 0 to fill in `Initial Joint density`. It leaves out
+`Final Joint density`, which needs a full run (step 4 of [Adding a new benchmark](#adding-a-new-benchmark)).
+
 ## Running a benchmark
 
 ```bash
