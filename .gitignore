@@ -6,3 +6,8 @@ operator_study/analysis/
 operator_study/beast-frozen.jar
 operator_study/conditions.csv
 __pycache__/
+stl2_study/runs/
+stl2_study/reference/
+stl2_study/analysis/
+stl2_study/beast-frozen.jar
+stl2_study/conditions.csv
