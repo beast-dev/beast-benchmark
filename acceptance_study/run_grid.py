@@ -40,7 +40,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from common import REPO_DIR, load_config, read_log, read_ops, read_trees, work_dir
+from common import REPO_DIR, load_config, operator_kind, read_log, read_ops, read_trees, work_dir
 from make_variants import write_variant
 
 sys.path.insert(0, str(REPO_DIR))
@@ -223,7 +223,7 @@ def check(config, conds, workers) -> bool:
                 columns, data = read_log(tmp / f"{cond['run_id']}.log")
                 _, trees = read_trees(tmp / f"{cond['run_id']}.trees")
                 ops = read_ops(tmp / f"{cond['run_id']}.ops")
-                sl = next((o for n, o in ops.items() if n.startswith("subtreeLeap")), None)
+                sl = next((o for n, o in ops.items() if operator_kind(n) == "subtreeLeap"), None)
                 problems = []
                 if "topologyChanged" not in columns:
                     problems.append("no SubtreeLeap columns in the log")

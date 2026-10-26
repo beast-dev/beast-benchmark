@@ -240,6 +240,22 @@ def clades_from_json(data: dict) -> dict:
     return {int(k, 16): f for k, f in data.items()}
 
 
+def split_operator_name(name: str):
+    """'stl1:subtreeLeap(treeModel)' -> ('stl1', 'subtreeLeap(treeModel)'); no id -> (None, name).
+
+    BEAST prefixes an operator's name with its XML id when it has one."""
+    head = name.split("(")[0]
+    if ":" in head:
+        op_id, base = name.split(":", 1)
+        return op_id, base
+    return None, name
+
+
+def operator_kind(name: str) -> str:
+    """'stl1:subtreeLeap(treeModel)' -> 'subtreeLeap'."""
+    return split_operator_name(name)[1].split("(")[0].strip()
+
+
 def geometric_mean(values):
     v = [x for x in values if x is not None and x > 0 and math.isfinite(x)]
     return float(np.exp(np.mean(np.log(v)))) if v else float("nan")

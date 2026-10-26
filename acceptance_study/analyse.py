@@ -29,9 +29,10 @@ import sys
 
 import numpy as np
 
-from common import (NON_PARAMETER_COLUMNS, clades_from_json, clades_to_json, ess,
-                    geometric_mean, load_config, read_log, read_ops, read_trees, split_deviation,
-                    split_frequencies, work_dir)
+from common import (NON_PARAMETER_COLUMNS, clades_from_json, clades_to_json, ess, geometric_mean,
+                    load_config, operator_kind, read_log, read_ops, read_trees, split_deviation,
+                    split_frequencies, split_operator_name, work_dir)
+from make_variants import SL_ID  # the id make_variants gives the main SubtreeLeap
 
 # set from the config in main()
 RUNS_DIR = REFERENCE_DIR = ANALYSIS_DIR = None
@@ -204,9 +205,12 @@ def run_metrics(config, run_id, result, reference):
     ops = read_ops(run_dir / f"{run_id}.ops")
     total_time = sum(o["time_s"] for o in ops.values())
     for name, o in ops.items():
-        short = name.split("(")[0]
+        op_id, _ = split_operator_name(name)
+        short = operator_kind(name)
         if short in ("subtreeLeap", "fixedHeightSubtreePruneRegraft"):
             key = "sl" if short == "subtreeLeap" else "fhspr"
+            if op_id and op_id != SL_ID:
+                key += f"_{op_id}"  # a second SubtreeLeap (or FHSPR) gets its own columns
             m[f"{key}_accept"] = o["accept"]
             m[f"{key}_tuning"] = o["tuning"]
             m[f"{key}_us_per_op"] = o["time_per_op_us"]
