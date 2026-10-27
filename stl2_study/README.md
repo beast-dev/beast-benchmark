@@ -31,10 +31,12 @@ A low target makes the second move adapt to long leaps, for topology. A high tar
 |---|---|---|---|
 | small-2 | 165 taxa, 1698 sites | BEAGLE, MAT (2×2 negative control: targets 0.05/0.1, weights 0.1/0.3) | 40M |
 | tall-1 | 1441 taxa, 987 sites | BEAGLE (3 control seeds), MAT | 60M |
-| wide-1 | 64 taxa, 185,578 sites; clock rate fixed | BEAGLE, MAT | set from the pilot |
-| big-1 | 976 taxa, 29,409 sites | MAT only | set from the pilot |
+| wide-1 | 64 taxa, 185,578 sites; clock rate fixed | BEAGLE, MAT (2×2, as small-2) | 30M |
+| big-1 | 976 taxa, 29,409 sites | MAT only (targets 0.05/0.1 × weights 0.1/0.3/1.0) | 100M |
 
-That's 297 runs, about 450 core-hours with the placeholder chain lengths for wide-1 and big-1. tall-1 BEAGLE is 243 of those core-hours. Levels can be overridden per dataset and likelihood in `study.json` (`levels`, `reps`, `reps_default`); small-2 uses this.
+That's 203 runs, about 545 core-hours (about 45 hours on 12 workers). tall-1 BEAGLE is 243 of those core-hours. The wide-1 and big-1 references use 5× the chain length; big-1's are the longest runs, at about 13 hours each.
+
+**Pilot (wide-1, big-1).** At 20M states the default's minimum continuous ESS was 270–390 on wide-1 (both likelihoods) but only 43–60 on big-1 (treeLength, prior). So big-1 gets 100M states (ESS about 250) and a reduced grid. wide-1, with 64 taxa, gets the small-2 negative-control grid. Levels can be overridden per dataset and likelihood in `study.json` (`levels`, `reps`, `reps_default`); small-2 uses this.
 
 **Why these levels.** In the acceptance study, the short steps of a high SubtreeLeap target never helped topology mixing. On tall-1, long leaps did: at targets 0.05–0.15 the worst clade mixed 2.3–3.5× better, but continuous mixing fell to 0.4–0.56 of the default. On the small trees, 0.234 was already the balance point. So the grid concentrates on low targets and on tall-1, with small-2 as a negative control. The question is whether a low-target second move can capture tall-1's topology gain without the continuous loss.
 

@@ -105,27 +105,64 @@
       "xml": "Benchmarks/Benchmark-wide/benchmark-wide-1-{likelihood}.xml",
       "shape": "wide: 64 taxa, 185578 sites (clock rate fixed)",
       "taxa": 64,
-      "states": null,
+      "states": 30000000,
       "likelihoods": [
         "min",
         "mat"
       ],
       "minutes_per_mstate": {
-        "min": 5.0,
-        "mat": 2.0
+        "min": 2.15,
+        "mat": 1.5
+      },
+      "reference_multiplier": 5,
+      "levels": {
+        "min": {
+          "stl2_targets": [
+            0.05,
+            0.1
+          ],
+          "stl2_factors": [
+            0.1,
+            0.3
+          ]
+        },
+        "mat": {
+          "stl2_targets": [
+            0.05,
+            0.1
+          ],
+          "stl2_factors": [
+            0.1,
+            0.3
+          ]
+        }
       }
     },
     "big-1": {
       "xml": "Benchmarks/Benchmark-big/benchmark-big-1-{likelihood}.xml",
       "shape": "big: 976 taxa, 29409 sites (MAT only)",
       "taxa": 976,
-      "states": null,
+      "states": 100000000,
       "likelihoods": [
         "mat"
       ],
       "reference_likelihood": "mat",
       "minutes_per_mstate": {
-        "mat": 2.0
+        "mat": 1.57
+      },
+      "reference_multiplier": 5,
+      "levels": {
+        "mat": {
+          "stl2_targets": [
+            0.05,
+            0.1
+          ],
+          "stl2_factors": [
+            0.1,
+            0.3,
+            1.0
+          ]
+        }
       }
     }
   },
