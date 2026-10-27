@@ -1,0 +1,10 @@
+arm,level,run_id,dataset,likelihood,rep,seed,states,stl2_target,stl2_factor,stl2_weight,sl_size,sl_target,sl_adapt,sl_kernel,adaptation_target,operator_weights
+pilot,default,wide-1-min_20M_default_s1,wide-1,min,1,1,20000000,,,,,,,,,
+pilot,default,wide-1-min_20M_default_s2,wide-1,min,2,2,20000000,,,,,,,,,
+pilot,default,wide-1-min_20M_default_s3,wide-1,min,3,3,20000000,,,,,,,,,
+pilot,default,wide-1-mat_20M_default_s1,wide-1,mat,1,1,20000000,,,,,,,,,
+pilot,default,wide-1-mat_20M_default_s2,wide-1,mat,2,2,20000000,,,,,,,,,
+pilot,default,wide-1-mat_20M_default_s3,wide-1,mat,3,3,20000000,,,,,,,,,
+pilot,default,big-1-mat_20M_default_s1,big-1,mat,1,1,20000000,,,,,,,,,
+pilot,default,big-1-mat_20M_default_s2,big-1,mat,2,2,20000000,,,,,,,,,
+pilot,default,big-1-mat_20M_default_s3,big-1,mat,3,3,20000000,,,,,,,,,
