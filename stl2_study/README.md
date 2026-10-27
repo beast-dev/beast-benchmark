@@ -23,18 +23,20 @@ A low target makes the second move adapt to long leaps, for topology. A high tar
 
 | | Levels |
 |---|---|
-| stl2 target acceptance | 0.02, 0.05, 0.10, 0.50 |
+| stl2 target acceptance | 0.03, 0.05, 0.10, 0.15 |
 | stl2 weight (× number of taxa) | 0.03, 0.1, 0.3, 1.0 |
 | Seeds | 3 per grid cell, 5 for the control |
 
 | Dataset | Shape | Likelihoods | Chain length |
 |---|---|---|---|
-| small-2 | 165 taxa, 1698 sites | BEAGLE, MAT | 40M |
-| tall-1 | 1441 taxa, 987 sites | BEAGLE (2×2 grid: targets 0.05/0.1, weights 0.1/0.3; 3 control seeds), MAT | 60M |
+| small-2 | 165 taxa, 1698 sites | BEAGLE, MAT (2×2 negative control: targets 0.05/0.1, weights 0.1/0.3) | 40M |
+| tall-1 | 1441 taxa, 987 sites | BEAGLE (3 control seeds), MAT | 60M |
 | wide-1 | 64 taxa, 185,578 sites; clock rate fixed | BEAGLE, MAT | set from the pilot |
 | big-1 | 976 taxa, 29,409 sites | MAT only | set from the pilot |
 
-That's 333 runs, about 355 core-hours with the placeholder chain lengths for wide-1 and big-1. Levels can be overridden per dataset and likelihood in `study.json` (`levels`, `reps`, `reps_default`); tall-1 BEAGLE uses this.
+That's 297 runs, about 450 core-hours with the placeholder chain lengths for wide-1 and big-1. tall-1 BEAGLE is 243 of those core-hours. Levels can be overridden per dataset and likelihood in `study.json` (`levels`, `reps`, `reps_default`); small-2 uses this.
+
+**Why these levels.** In the acceptance study, the short steps of a high SubtreeLeap target never helped topology mixing. On tall-1, long leaps did: at targets 0.05–0.15 the worst clade mixed 2.3–3.5× better, but continuous mixing fell to 0.4–0.56 of the default. On the small trees, 0.234 was already the balance point. So the grid concentrates on low targets and on tall-1, with small-2 as a negative control. The question is whether a low-target second move can capture tall-1's topology gain without the continuous loss.
 
 **Reference posteriors.** Each dataset is scored against one reference posterior. small-2 and tall-1 reuse the weights study's (`../operator_study/reference`, committed on this branch). wide-1 needs a new BEAGLE reference. big-1 needs a MAT one (`reference_likelihood: "mat"`); MAT has been validated against BEAGLE on small-2. `design.py reference` makes runs only for datasets that have no reference yet.
 
@@ -59,7 +61,7 @@ python3 analyse.py all                       # analysis/summary.csv, grid_DATASE
 ```
 
 To split the work across two machines, give each its own datasets, for example:
-- `--dataset tall-1` on one machine (about 170 core-hours);
+- `--dataset tall-1` on one machine (about 340 core-hours);
 - `--dataset small-2 --dataset wide-1 --dataset big-1` on the other.
 
 Each machine then holds the reference for its own datasets. Run `analyse.py` where the runs are, or bring the `runs/` together first.
