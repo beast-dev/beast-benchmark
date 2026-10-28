@@ -360,7 +360,9 @@ const PCONFIG = { responsive: true, displaylogo: false, modeBarButtonsToRemove: 
 function plot(id, traces, layout) {
   const el = document.getElementById(id);
   if (!traces.length) { Plotly.purge(el); el.innerHTML = '<div class="empty">No data for the current selection.</div>'; return; }
-  el.innerHTML = '';
+  // Remove only the empty-state message: clearing the element would delete a live plot's DOM
+  // while Plotly still holds its state, and react would then update nothing
+  el.querySelector(':scope > .empty')?.remove();
   Plotly.react(el, traces, layout, PCONFIG);
 }
 const refLine1 = (axis = 'y') => ({
