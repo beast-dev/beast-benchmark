@@ -15,7 +15,8 @@ Arms:
   pilot      default runs for datasets with no chain length yet (study.json "states": null)
   reference  long default runs giving the reference posterior, for datasets that have none
   grid       the control plus every (stl2 target, stl2 factor) pair, per dataset and likelihood
-  confirm    the control against the settings in study.json "confirm"
+  confirm    the control against the settings in study.json "confirm", on the datasets and
+             likelihoods in "confirm_datasets" (default: every study dataset and likelihood)
 
 Usage:
   design.py ARM [ARM ...] [-o conditions.csv] [--append]
@@ -100,10 +101,13 @@ def arm_rows(config, arm):
     elif arm == "confirm":
         if not config.get("confirm"):
             sys.exit('Fill in study.json "confirm" ({"name": {"stl2_target": t, "stl2_factor": f}}) first')
+        only = config.get("confirm_datasets")
         for ds in datasets:
+            if only is not None and ds not in only:
+                continue
             d = config["datasets"][ds]
             states = study_states(config, ds)
-            for lik in d["likelihoods"]:
+            for lik in (only[ds] if only is not None else d["likelihoods"]):
                 for seed in range(1, reps["confirm"] + 1):
                     rows.append(make_row(config, arm, "default", ds, lik, seed, states))
                     for name, s in config["confirm"].items():

@@ -17,6 +17,8 @@ Efficiency is ESS per hour of BEAST run time (eff_*), and ESS per million states
   split_min  the smallest ESS over indicator traces of the uncertain clades
              (reference frequency in [0.05, 0.95], up to the 50 nearest 0.5)
 and accuracy per cost as ASDSF against the reference x sqrt(hours).
+A run is stuck when some uncertain clade's indicator never changes (split ESS < 2); each cell
+counts its stuck runs (n_stuck, n_stuck_default) with a one-sided Fisher exact p (fewer_stuck_p).
 """
 
 import argparse
@@ -273,6 +275,25 @@ def bootstrap_ratio(values, baseline, n=2000, rng=random.Random(1)):
     return ratio, draws[int(0.025 * n)], draws[int(0.975 * n) - 1]
 
 
+# A run is stuck when an uncertain clade's indicator never changes (ESS 1): the run stays
+# on one side of a clade the reference puts between 5% and 95%
+STUCK_SPLIT_ESS = 2.0
+
+
+def is_stuck(m):
+    v = m.get("ess_split_min")
+    return isinstance(v, (int, float)) and math.isfinite(v) and v < STUCK_SPLIT_ESS
+
+
+def fewer_stuck_p(stuck, n, stuck_base, n_base):
+    """One-sided Fisher exact p that the cell gets stuck no more often than the control by chance:
+    P(the cell has <= stuck of the pooled stuck runs), drawing n runs from the pooled n + n_base."""
+    total, k = n + n_base, stuck + stuck_base
+    if k == 0:
+        return float("nan")
+    return sum(math.comb(k, i) * math.comb(total - k, n - i) for i in range(0, stuck + 1)) / math.comb(total, n)
+
+
 def is_default(run_id):
     return "_default_s" in run_id
 
@@ -304,6 +325,9 @@ def summarise(conditions, metrics):
         row = {"arm": arm, "dataset": dataset, "likelihood": likelihood, "level": level,
                "stl2_target": cond.get("stl2_target", ""), "stl2_factor": cond.get("stl2_factor", ""),
                "n": len(runs), "n_default": len(base)}
+        row["n_stuck"] = sum(map(is_stuck, runs))
+        row["n_stuck_default"] = sum(map(is_stuck, base))
+        row["fewer_stuck_p"] = fewer_stuck_p(row["n_stuck"], len(runs), row["n_stuck_default"], len(base))
         for metric in METRICS:
             for key in (f"eff_{metric}", f"mst_{metric}"):
                 row[f"{key}_gmean"] = geometric_mean([r.get(key) for r in runs])

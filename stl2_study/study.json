@@ -30,7 +30,7 @@
   "reps": {
     "grid": 3,
     "default": 5,
-    "confirm": 5
+    "confirm": 13
   },
   "levels": {
     "stl2_targets": [
@@ -172,5 +172,15 @@
     "wide-1",
     "big-1"
   ],
-  "confirm": {}
+  "confirm": {
+    "t0.05_w0.1": {
+      "stl2_target": 0.05,
+      "stl2_factor": 0.1
+    }
+  },
+  "confirm_datasets": {
+    "tall-1": [
+      "min"
+    ]
+  }
 }

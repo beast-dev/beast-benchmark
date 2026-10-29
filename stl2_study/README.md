@@ -62,6 +62,19 @@ python3 analyse.py reference                 # check max pairwise ASDSF < 0.01
 python3 analyse.py all                       # analysis/summary.csv, grid_DATASET-LIKELIHOOD.png
 ```
 
+### 3. Confirmation on tall-1 BEAGLE
+
+The grid's three tall-1 BEAGLE control seeds include one stuck run (seed 3: a clade's indicator never changes, ESS 1). That one run inflated every tall-1 BEAGLE worst-clade ratio about 2×. Across this study and the acceptance study, tall-1 BEAGLE runs with short steps often got stuck, while runs with long leaps never did (0 of 63). The confirmation arm estimates how often the default gets stuck, and whether a cheap second move prevents it. It runs 13 seeds each of the default and of target 0.05 at weight 0.1 × taxa (study.json `confirm`, `confirm_datasets`). Seeds 1–3 already exist, so this is 20 new runs, about 96 core-hours.
+
+```sh
+python3 design.py confirm --append
+python3 run_grid.py --check
+caffeinate -i python3 run_grid.py --arm confirm
+python3 analyse.py all                       # summary.csv: n_stuck, n_stuck_default, fewer_stuck_p
+```
+
+The baseline for every cell is all the default runs of that dataset and likelihood, so this also re-scores the grid against 13 control seeds.
+
 To split the work across two machines, give each its own datasets, for example:
 - `--dataset tall-1` on one machine (about 340 core-hours);
 - `--dataset small-2 --dataset wide-1 --dataset big-1` on the other.
