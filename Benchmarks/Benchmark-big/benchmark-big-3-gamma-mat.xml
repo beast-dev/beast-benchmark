@@ -6489,11 +6489,9 @@ Initial Joint density: -84219.5697
 		</upDownOperator>
 		<subtreeLeap size="1.0" weight="899">
 			<treeModel idref="treeModel"/>
-			<mutationHistoryResampler idref="matResampler"/>
 		</subtreeLeap>
 		<fixedHeightSubtreePruneRegraft weight="89.9">
 			<treeModel idref="treeModel"/>
-			<mutationHistoryResampler idref="matResampler"/>
 		</fixedHeightSubtreePruneRegraft>
 		<scaleOperator scaleFactor="0.75" weight="3">
 			<parameter idref="constant.popSize"/>

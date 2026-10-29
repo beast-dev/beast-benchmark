@@ -11448,11 +11448,9 @@ Final Joint density: -63974.0335
 		</upDownOperator>
 		<subtreeLeap size="1.0" weight="1610">
 			<treeModel idref="treeModel"/>
-			<mutationHistoryResampler idref="matResampler"/>
 		</subtreeLeap>
 		<fixedHeightSubtreePruneRegraft weight="161">
 			<treeModel idref="treeModel"/>
-			<mutationHistoryResampler idref="matResampler"/>
 		</fixedHeightSubtreePruneRegraft>
 		<scaleOperator scaleFactor="0.75" weight="3">
 			<parameter idref="constant.popSize"/>

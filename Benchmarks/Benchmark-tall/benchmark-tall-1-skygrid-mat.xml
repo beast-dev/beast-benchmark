@@ -10275,11 +10275,9 @@ Initial Joint density: -109274.0614
 		</upDownOperator>
 		<subtreeLeap size="1.0" weight="1441">
 			<treeModel idref="treeModel"/>
-			<mutationHistoryResampler idref="matResampler"/>
 		</subtreeLeap>
 		<fixedHeightSubtreePruneRegraft weight="144.1">
 			<treeModel idref="treeModel"/>
-			<mutationHistoryResampler idref="matResampler"/>
 		</fixedHeightSubtreePruneRegraft>
 		<gmrfGridBlockUpdateOperator scaleFactor="1.0" weight="2">
 			<gmrfSkyrideLikelihood idref="skygrid"/>
