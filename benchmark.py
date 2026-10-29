@@ -16,6 +16,11 @@ Options:
     --states STATES   Override number of MCMC states from XML header (for shorter test runs)
     --prefix PREFIX   Override the output file prefix (default: auto timestamp)
     --no-overwrite    Do not pass -overwrite to BEAST
+    --profile [ASPECTS]
+                      Profile the chain with -Dmcmc.profile=ASPECTS (default: all); the profile
+                      is printed after the operator analysis in the .stdout file. Needs a BEAST
+                      with ChainProfile, and a launcher that runs java (it is passed through
+                      JDK_JAVA_OPTIONS)
     [extra args]      Any unrecognised arguments are forwarded directly to BEAST
                       (e.g. python benchmark.py big 1 min -beagle_GPU -beagle_double)
 
@@ -726,6 +731,9 @@ def main():
                         help="Do not pass -overwrite to BEAST")
     parser.add_argument("--append", action="store_true",
                         help="Append results to results.csv in the current directory")
+    parser.add_argument("--profile", nargs="?", const="all", default=None, metavar="ASPECTS",
+                        help="Profile the chain: sets the JVM property mcmc.profile=ASPECTS "
+                             "(comma-separated: steps, likelihoods, mat, ...; default all)")
     args, extra_beast_args = parser.parse_known_args()
 
     btype = args.type.lower()
@@ -785,8 +793,19 @@ def main():
         cmd.extend(extra_beast_args)
     cmd.append(str(xml_path))
 
+    # mcmc.profile is a JVM system property; the beast launcher scripts take no JVM options, but
+    # the java launcher (JDK 9+) reads JDK_JAVA_OPTIONS
+    env = os.environ.copy()
+    if args.profile:
+        profile_opt = f"-Dmcmc.profile={args.profile}"
+        env["JDK_JAVA_OPTIONS"] = f"{env.get('JDK_JAVA_OPTIONS', '')} {profile_opt}".strip()
+
     print(f"\n  Run directory: {run_dir.name}")
     print(f"  Command: {' '.join(cmd)}")
+    if args.profile:
+        print(f"  Profiling:     {profile_opt} (via JDK_JAVA_OPTIONS)")
+        if args.append:
+            print("  NOTE: profiling adds timing overhead to the run appended to results.csv")
     print("-" * 70)
     print("  Running BEAST...\n")
 
@@ -806,6 +825,7 @@ def main():
             text=True,
             bufsize=1,
             cwd=run_dir,
+            env=env,
         )
     except FileNotFoundError:
         sys.exit(f"BEAST executable not found: '{args.beast}'\n"
