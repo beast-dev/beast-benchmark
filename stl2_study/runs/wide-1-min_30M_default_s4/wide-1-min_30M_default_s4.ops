@@ -1,0 +1,7 @@
+
+Operator analysis
+Operator                                          Weight  Tuning   Count      Time(s)    Time/Op(us)Pr(accept) 
+subtreeLeap:subtreeLeap(treeModel)                64.0     0.0     25896063   5564.36    214.87     0.234      
+fixedHeightSubtreePruneRegraft(treeModel)         6.4              2588815    594.97     229.82     0.0039     
+scale(constant.popSize)                           3.0      0.468   1215122    60.79      50.03      0.2341     
+

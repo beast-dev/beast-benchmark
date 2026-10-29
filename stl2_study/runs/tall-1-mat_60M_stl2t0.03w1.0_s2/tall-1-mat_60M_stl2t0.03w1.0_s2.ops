@@ -1,0 +1,11 @@
+
+Operator analysis
+Operator                                          Weight  Tuning   Count      Time(s)    Time/Op(us)Pr(accept) 
+scale(clock.rate)                                 3.0      0.863   56283      77.26      1372.76    0.2355     
+up(nodeHeights(treeModel))/down(clock.rate)       3.0      1.0     56250      66.33      1179.16    0.2343     
+subtreeLeap:subtreeLeap(treeModel)                1441.0   0.355   26922652   2963.14    110.06     0.234      
+stl2:subtreeLeap(treeModel)                       1441.0   3.277   26925353   3592.92    133.44     0.03       
+fixedHeightSubtreePruneRegraft(treeModel)         144.1            2692087    336.14     124.86     0.032      
+scale(constant.popSize)                           3.0      0.838   55843      3.4        60.91      0.2333     
+mutationHistoryGibbs(treeModel)                   144.1            2691532    150.48     55.91      1.0        
+
