@@ -86,9 +86,7 @@ def expected_minutes(config, cond) -> float:
 def beast_command(config, jar, cond, xml_name=None) -> list:
     cmd = ["java", *config["java_args"], "-cp", str(jar), "dr.app.beast.BeastMain",
            *config["beast_args"], "-seed", str(cond["seed"])]
-    if cond["adaptation_target"]:
-        cmd += ["-adaptation_target", str(cond["adaptation_target"])]
-    if cond["operator_weights"]:
+    if cond.get("operator_weights"):
         cmd += ["-operator_weights", cond["operator_weights"]]
     cmd.append(xml_name or f"{cond['run_id']}.xml")
     return cmd
