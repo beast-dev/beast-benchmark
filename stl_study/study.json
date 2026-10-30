@@ -1,0 +1,76 @@
+{
+  "beast_jar": "../BEAST/build/dist/beast.jar",
+  "java_args": [
+    "-Xmx2g",
+    "-XX:+UseSerialGC",
+    "-Djava.library.path=/opt/homebrew/lib"
+  ],
+  "beast_args": [
+    "-citations_off",
+    "-tests",
+    "0",
+    "-overwrite",
+    "-beagle_CPU",
+    "-beagle_threads",
+    "1",
+    "-threads",
+    "1"
+  ],
+  "workers": 12,
+  "samples": 2000,
+  "burnin": 0.1,
+  "pilot_runs": 3,
+  "pilot_states": 20000000,
+  "reference_runs": 4,
+  "reference_multiplier": 10,
+  "reference_dirs": [
+    "reference",
+    "../stl2_study/reference",
+    "../operator_study/reference"
+  ],
+  "reps": {
+    "grid": 3,
+    "default": 5
+  },
+  "levels": {
+    "stl_targets": [0.05, 0.10, 0.15, 0.234, 0.35, 0.50],
+    "stl_weight_factors": [0.1, 0.25, 0.5, 1.0, 2.0, 4.0],
+    "stl2_targets": [0.03, 0.05, 0.10, 0.15, 0.20],
+    "stl2_factors": [0.1, 0.3]
+  },
+  "datasets": {
+    "small-2": {
+      "xml": "Benchmarks/Benchmark-small/benchmark-small-2-{likelihood}.xml",
+      "shape": "small: 165 taxa, 1698 sites",
+      "taxa": 165,
+      "states": 40000000,
+      "likelihoods": [
+        "min",
+        "mat"
+      ],
+      "minutes_per_mstate": {
+        "min": 2.21,
+        "mat": 1.1
+      }
+    },
+    "tall-1": {
+      "xml": "Benchmarks/Benchmark-tall/benchmark-tall-1-{likelihood}.xml",
+      "shape": "tall: 1441 taxa, 987 sites",
+      "taxa": 1441,
+      "states": 60000000,
+      "likelihoods": [
+        "min",
+        "mat"
+      ],
+      "minutes_per_mstate": {
+        "min": 4.76,
+        "mat": 1.88
+      },
+      "reference_multiplier": 5
+    }
+  },
+  "study_datasets": [
+    "small-2",
+    "tall-1"
+  ]
+}
