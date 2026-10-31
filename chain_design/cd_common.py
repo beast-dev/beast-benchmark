@@ -38,7 +38,9 @@ CONTINUOUS_PARAMETERS = ["joint", "prior", "likelihood", "rootHeight", "treeLeng
 
 CONDITION_FIELDS = ["run_id", "phase", "config", "chains", "tempered", "threads", "seed",
                     "minutes", "states", "log_every", "ladder_ratio", "swap_every",
-                    "processes", "gc"]
+                    "processes", "gc", "device", "gpus", "gpu_chains", "numa"]
+
+CPU_DEVICE_ARGS = ["-beagle_CPU", "-beagle_SSE"]
 
 # chain lengths for runs that are stopped at their time limit rather than finishing
 UNBOUNDED_STATES = 2_000_000_000
@@ -130,19 +132,47 @@ def make_xml(config, cond, run_dir: Path) -> Path:
     return path
 
 
-def beast_command(config, jar: Path, cond, xml_name: str, seed=None) -> list:
+def beagle_order(config, cond):
+    """BEAGLE resource for each instance, in creation order (chain 1's cold chain, its heated
+    chains, then chain 2, ...): GPU chains alternate over the GPUs used, CPU chains (in a
+    mixed configuration, after the GPU chains) get resource 0."""
+    device = cond.get("device") or "cpu"
+    if device == "cpu":
+        return None
+    gpus = config["machine"]["gpu_resources"][:int(cond.get("gpus") or 1)]
+    chains = int(cond["chains"])
+    tempered = int(cond.get("tempered") or 1)
+    gpu_chains = chains if device == "gpu" else int(cond["gpu_chains"])
+    order = []
+    for k in range(chains):
+        for _ in range(tempered):
+            if k < gpu_chains:
+                order.append(gpus[len(order) % len(gpus)])
+            else:
+                order.append(0)
+    return order
+
+
+def beast_command(config, jar: Path, cond, xml_name: str, seed=None, process_index=0) -> list:
     java = list(config["java_args"])
     if int(cond.get("processes") or 1) > 1:
         # one small JVM per single-threaded chain
         java = [a for a in java if not a.startswith(("-Xms", "-Xmx"))] + ["-Xms1g", "-Xmx1g"]
     if cond.get("gc"):
         java = [a for a in java if not a.startswith("-XX:+Use") or "GC" not in a] + [cond["gc"]]
-    cmd = ["java"] + java + ["-cp", str(jar), "dr.app.beast.BeastMain"] + list(config["beast_args"])
+    beast = list(config["beast_args"])
+    order = beagle_order(config, cond)
+    if order is None:
+        beast += [a for a in CPU_DEVICE_ARGS if a not in beast]
+    else:
+        beast = [a for a in beast if a not in CPU_DEVICE_ARGS]
+        beast += ["-beagle_GPU", "-beagle_order", ",".join(str(r) for r in order)]
+    cmd = ["java"] + java + ["-cp", str(jar), "dr.app.beast.BeastMain"] + beast
     cmd += ["-seed", str(seed if seed is not None else cond["seed"]),
             "-beagle_threads", str(cond["threads"])]
 
     chains = int(cond["chains"])
-    tempered = int(cond["tempered"] or 1)
+    tempered = int(cond.get("tempered") or 1)
     if chains > 1 or tempered > 1:
         cmd += ["-chains", str(chains), "-chain_threads", str(chains * tempered),
                 "-convergence_every", "0"]
@@ -152,17 +182,25 @@ def beast_command(config, jar: Path, cond, xml_name: str, seed=None) -> list:
                 "-mc3_temperatures", ",".join(str(t) for t in temps),
                 "-mc3_swap", str(cond["swap_every"]),
                 "-mc3_scheme", config["tempering"]["scheme"]]
-    return cmd + [xml_name]
+    cmd += [xml_name]
+    if cond.get("numa") and int(cond["numa"]):
+        # one JVM per NUMA node, bound to its cores and memory
+        node = process_index % config["machine"]["numa_nodes"]
+        cmd = ["numactl", f"--cpunodebind={node}", f"--membind={node}"] + cmd
+    return cmd
 
 
 def chain_files(run_dir: Path, run_id: str, cond) -> list:
     """The (log, trees) files of each chain whose samples count: one per independent chain,
     or one per tempering set (its cold chain)."""
     chains = int(cond["chains"])
-    if int(cond.get("processes") or 1) > 1:
-        return [(d / f"{run_id}.log", d / f"{run_id}.trees")
-                for d in sorted(run_dir.glob("p*")) if d.is_dir()]
-    if chains == 1:
-        return [(run_dir / f"{run_id}.log", run_dir / f"{run_id}.trees")]
-    return [(run_dir / f"{run_id}.chain{k}.log", run_dir / f"{run_id}.chain{k}.trees")
-            for k in range(1, chains + 1)]
+    processes = int(cond.get("processes") or 1)
+    dirs = [run_dir / f"p{i + 1:02d}" for i in range(processes)] if processes > 1 else [run_dir]
+    files = []
+    for d in dirs:
+        if chains == 1:
+            files.append((d / f"{run_id}.log", d / f"{run_id}.trees"))
+        else:
+            files += [(d / f"{run_id}.chain{k}.log", d / f"{run_id}.chain{k}.trees")
+                      for k in range(1, chains + 1)]
+    return files

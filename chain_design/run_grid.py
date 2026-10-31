@@ -72,8 +72,10 @@ def log_size(paths):
 def run_processes(cmds, cwds, stdout_paths, limit_seconds, chain_logs, stall_seconds, dump_path):
     """Starts the processes and stops them at the time limit, or if the chain logs stop growing
     for stall_seconds (a thread dump is saved first). Returns (exit codes, stopped, stalled,
-    start, end, first log times)."""
+    start, end, first log times, seconds the machine slept)."""
     start = time.time()
+    # the monotonic clock stops while the machine sleeps (macOS and Linux), the wall clock does not
+    mono_start = time.monotonic()
     procs = []
     for cmd, cwd, out in zip(cmds, cwds, stdout_paths):
         f = open(out, "w")
@@ -87,12 +89,12 @@ def run_processes(cmds, cwds, stdout_paths, limit_seconds, chain_logs, stall_sec
     stopped = False
     stalled = False
     deadline = start + limit_seconds
-    last_size, last_growth = -1, time.time()
+    last_size, last_growth = -1, time.monotonic()
     while any(p.poll() is None for p, _ in procs):
         size = log_size(chain_logs)
         if size != last_size:
-            last_size, last_growth = size, time.time()
-        elif size > 0 and time.time() - last_growth > stall_seconds:
+            last_size, last_growth = size, time.monotonic()
+        elif size > 0 and time.monotonic() - last_growth > stall_seconds:
             stalled = True
             with open(dump_path, "w") as dump:
                 for p, _ in procs:
@@ -113,11 +115,12 @@ def run_processes(cmds, cwds, stdout_paths, limit_seconds, chain_logs, stall_sec
             break
         time.sleep(2)
     end = time.time()
+    slept = (end - start) - (time.monotonic() - mono_start)
     for p, f in procs:
         p.wait()
         f.close()
     watcher.join(timeout=5)
-    return [p.returncode for p, _ in procs], stopped, stalled, start, end, times
+    return [p.returncode for p, _ in procs], stopped, stalled, start, end, times, slept
 
 
 def run_one(config, jar, digest, cond):
@@ -136,32 +139,51 @@ def run_one(config, jar, digest, cond):
         processes = int(cond.get("processes") or 1)
         cmds, cwds, outs = [], [], []
         if processes > 1:
-            # separate JVMs, one single-threaded chain each (pilot P3)
+            # separate JVMs (16 single chains in pilot P3; one per NUMA node on darwin)
             for i in range(processes):
                 d = run_dir / f"p{i + 1:02d}"
                 d.mkdir(exist_ok=True)
                 xml = cc.make_xml(config, cond, d)
-                cmds.append(cc.beast_command(config, jar, cond, xml.name, seed=int(cond["seed"]) + i))
+                cmds.append(cc.beast_command(config, jar, cond, xml.name, seed=int(cond["seed"]) + i,
+                                             process_index=i))
                 cwds.append(d)
                 outs.append(d / "beast.out")
         else:
             xml = cc.make_xml(config, cond, run_dir)
             cmd = cc.beast_command(config, jar, cond, xml.name)
-            cmd.insert(1, f"-Xlog:gc:file={run_dir / 'gc.log'}")  # GC pause fraction
+            cmd.insert(cmd.index("java") + 1, f"-Xlog:gc:file={run_dir / 'gc.log'}")  # GC pause fraction
             cmds, cwds, outs = [cmd], [run_dir], [run_dir / "beast.out"]
 
         chain_logs = [lg for lg, _ in cc.chain_files(run_dir, run_id, cond)]
         limit = float(cond["minutes"]) * 60
-        # runs with a chain length finish by themselves; the limit is then only a backstop
+        # runs with a chain length finish by themselves (and then print their swap statistics);
+        # the limit is only a backstop, with room for start-up (parsing several large models)
         if cond.get("states"):
-            limit *= 1.25
+            limit = limit * 1.25 + 600
+        gpu_sampler = None
+        if (cond.get("device") or "cpu") != "cpu" and shutil.which("nvidia-smi"):
+            every = config.get("machine", {}).get("gpu_sampling_seconds", 30)
+            gpu_sampler = subprocess.Popen(
+                ["nvidia-smi", "--query-gpu=timestamp,index,utilization.gpu,memory.used",
+                 "--format=csv,noheader,nounits", "-l", str(every)],
+                stdout=open(run_dir / "gpu.csv", "w"), stderr=subprocess.DEVNULL)
         load_before = load_average()
         log(f"{run_id}: start ({cond['config']}, {processes} process(es), limit {limit / 60:.0f} min)")
-        codes, stopped, stalled, start, end, first_logs = run_processes(
-            cmds, cwds, outs, limit, chain_logs, config.get("stall_minutes", 10) * 60,
-            run_dir / f"stall_{time.strftime('%Y%m%d_%H%M%S')}.txt")
+        try:
+            codes, stopped, stalled, start, end, first_logs, slept = run_processes(
+                cmds, cwds, outs, limit, chain_logs, config.get("stall_minutes", 10) * 60,
+                run_dir / f"stall_{time.strftime('%Y%m%d_%H%M%S')}.txt")
+        finally:
+            if gpu_sampler:
+                gpu_sampler.terminate()
         if stopping.is_set():
             log(f"{run_id}: interrupted, will be redone")
+            return
+        if slept > 60:
+            # the wall-clock timings are meaningless (and a stall in a sleep is not a stall)
+            keep = run_dir.parent / f"{run_id}.slept_{time.strftime('%Y%m%d_%H%M%S')}"
+            run_dir.rename(keep)
+            log(f"{run_id}: the machine slept for {slept / 60:.1f} min; moved to {keep.name}, will be redone")
             return
         if stalled:
             # keep the evidence, then redo the run from scratch next time
@@ -204,8 +226,19 @@ def check(config, conds):
     except Exception as e:  # noqa: BLE001
         problems.append(f"XML variant: {e}")
     shutil.rmtree(tmp, ignore_errors=True)
+    if not shutil.which("java"):
+        problems.append("java not found")
+    if any(c.get("numa") and int(c["numa"]) for c in conds) and not shutil.which("numactl"):
+        problems.append("numactl not found (needed for the NUMA runs)")
+    if any((c.get("device") or "cpu") != "cpu" for c in conds):
+        if not shutil.which("nvidia-smi"):
+            problems.append("nvidia-smi not found (needed for the GPU runs)")
+        else:
+            gpus = subprocess.run(["nvidia-smi", "-L"], capture_output=True, text=True).stdout.strip()
+            log("GPUs:\n" + gpus)
     load = load_average()[0]
-    if load > 2:
+    cores = config.get("machine", {}).get("cores", 16)
+    if load > max(2, 0.1 * cores):
         problems.append(f"load average is {load:.1f}: something else is running")
     for p in problems:
         log("PROBLEM: " + p)
@@ -242,6 +275,9 @@ def main():
 
     signal.signal(signal.SIGINT, interrupt)
     signal.signal(signal.SIGTERM, interrupt)
+    if sys.platform == "darwin" and shutil.which("caffeinate"):
+        # no idle sleep while this script runs (a sleeping Mac stalls the runs and spoils the timings)
+        subprocess.Popen(["caffeinate", "-i", "-w", str(os.getpid())])
     jar, digest = frozen_jar(config)
     todo = [c for c in conds if not (cc.paths()["runs"] / c["run_id"] / "result.json").exists()]
     hours = sum(float(c["minutes"]) for c in todo) / 60

@@ -1,0 +1,81 @@
+{
+  "description": "big-2 BEAGLE on darwin (2 x Xeon E5-2687W v3: 20 cores / 40 hyper-threads on 2 NUMA nodes; 2 x Tesla P100): chains, threads, GPUs and tempering",
+  "work_dir": "darwin",
+  "beast_jar": "../BEAST/build/dist/beast.jar",
+  "xml": "Benchmarks/Benchmark-big/benchmark-big-2-min.xml",
+  "reference": "pooled",
+  "reference_check_seeds": [[1, 2], [3]],
+  "java_args": ["-Xms16g", "-Xmx16g", "-XX:+UseParallelGC", "-Djava.library.path=/usr/local/lib"],
+  "beast_args": ["-citations_off", "-tests", "0", "-overwrite", "-beagle_double",
+                 "-thread_scheme", "serial", "-threads", "0"],
+  "machine": {
+    "cores": 20,
+    "logical_cores": 40,
+    "numa_nodes": 2,
+    "gpu_resources": [1, 2],
+    "gpu_sampling_seconds": 30
+  },
+  "main": {
+    "hours": 8.0,
+    "seeds": [1, 2, 3],
+    "samples_per_chain": 1500,
+    "configs": {
+      "C1":  {"chains": 1,  "threads": "t_star"},
+      "C2":  {"chains": 2,  "threads": 10, "speed_key": "K2xt10", "numa_split_if": "numa_gain"},
+      "C4":  {"chains": 4,  "threads": 5,  "speed_key": "K4xt5"},
+      "C10": {"chains": 10, "threads": 2,  "speed_key": "K10xt2"},
+      "C20": {"chains": 20, "threads": 1,  "speed_key": "K20xt1"},
+      "C40": {"chains": 40, "threads": 1,  "speed_key": "K40xt1", "include_if": "hyperthreading_gain"},
+      "CT":  {"chains": 1,  "tempered": 4, "threads": 5, "speed_key": "CT"},
+      "G1":  {"chains": 1,  "device": "gpu", "gpus": 1, "threads": 1, "speed_key": "G1"},
+      "G2":  {"chains": 2,  "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "G2"},
+      "G4":  {"chains": 4,  "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "G4", "include_if": "gpu_sharing_gain"},
+      "GT":  {"chains": 1,  "tempered": 4, "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "GT"},
+      "M":   {"chains": 6,  "device": "mixed", "gpu_chains": 2, "gpus": 2, "threads": 4, "speed_key": "M"}
+    }
+  },
+  "tempering": {
+    "scheme": "deterministic_multiple",
+    "ladder_ratio": null,
+    "ladder_sd_factors": [0.5, 1.0, 2.0],
+    "swap_block_seconds": 0.5
+  },
+  "pilot": {
+    "minutes": 8,
+    "repeats": 2,
+    "log_every": 2000,
+    "throughput": [
+      {"id": "K1xt5",  "chains": 1,  "threads": 5},
+      {"id": "K1xt10", "chains": 1,  "threads": 10},
+      {"id": "K1xt20", "chains": 1,  "threads": 20},
+      {"id": "K1xt40", "chains": 1,  "threads": 40},
+      {"id": "K2xt10", "chains": 2,  "threads": 10},
+      {"id": "K2xt10_numa", "chains": 1, "processes": 2, "numa": 1, "threads": 10},
+      {"id": "K4xt5",  "chains": 4,  "threads": 5},
+      {"id": "K10xt2", "chains": 10, "threads": 2},
+      {"id": "K20xt1", "chains": 20, "threads": 1},
+      {"id": "K40xt1", "chains": 40, "threads": 1},
+      {"id": "G1",     "chains": 1,  "device": "gpu", "gpus": 1, "threads": 1},
+      {"id": "G2on1",  "chains": 2,  "device": "gpu", "gpus": 1, "threads": 1},
+      {"id": "G4on1",  "chains": 4,  "device": "gpu", "gpus": 1, "threads": 1},
+      {"id": "G2",     "chains": 2,  "device": "gpu", "gpus": 2, "threads": 1},
+      {"id": "G4",     "chains": 4,  "device": "gpu", "gpus": 2, "threads": 1},
+      {"id": "M",      "chains": 6,  "device": "mixed", "gpu_chains": 2, "gpus": 2, "threads": 4},
+      {"id": "CT",     "chains": 1,  "tempered": 4, "threads": 5},
+      {"id": "GT",     "chains": 1,  "tempered": 4, "device": "gpu", "gpus": 2, "threads": 1}
+    ],
+    "mixing": {"config": "G2", "hours": 24, "seed": 900},
+    "tempering_minutes": 40,
+    "tempering_configs": ["GT", "CT"],
+    "gains": {
+      "hyperthreading_gain": ["K40xt1", "K20xt1", 1.10],
+      "gpu_sharing_gain": ["G4", "G2", 1.10],
+      "numa_gain": ["K2xt10_numa", "K2xt10", 1.10]
+    }
+  },
+  "targets": {"continuous_ess": 200, "clade_ess": 100, "clade_tolerance": 0.05, "mean_tolerance_sd": 0.1},
+  "stuck": {"clade_deviation": 0.3},
+  "focal_clades": 50,
+  "curve_step_minutes": 10,
+  "stall_minutes": 20
+}
