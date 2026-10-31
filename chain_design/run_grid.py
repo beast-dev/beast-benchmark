@@ -208,6 +208,18 @@ def run_one(config, jar, digest, cond):
         lock.close()
 
 
+def missing_tools(conds):
+    problems = []
+    for tool in ("java", "jcmd"):
+        if not shutil.which(tool):
+            problems.append(f"{tool} not found (a full JDK is needed)")
+    if any(c.get("numa") and int(c["numa"]) for c in conds) and not shutil.which("numactl"):
+        problems.append("numactl not found (needed for the NUMA runs)")
+    if any((c.get("device") or "cpu") != "cpu" for c in conds) and not shutil.which("nvidia-smi"):
+        problems.append("nvidia-smi not found (needed for the GPU runs)")
+    return problems
+
+
 def check(config, conds):
     jar = (cc.REPO_DIR / config["beast_jar"]).resolve()
     problems = []
@@ -226,16 +238,10 @@ def check(config, conds):
     except Exception as e:  # noqa: BLE001
         problems.append(f"XML variant: {e}")
     shutil.rmtree(tmp, ignore_errors=True)
-    if not shutil.which("java"):
-        problems.append("java not found")
-    if any(c.get("numa") and int(c["numa"]) for c in conds) and not shutil.which("numactl"):
-        problems.append("numactl not found (needed for the NUMA runs)")
-    if any((c.get("device") or "cpu") != "cpu" for c in conds):
-        if not shutil.which("nvidia-smi"):
-            problems.append("nvidia-smi not found (needed for the GPU runs)")
-        else:
-            gpus = subprocess.run(["nvidia-smi", "-L"], capture_output=True, text=True).stdout.strip()
-            log("GPUs:\n" + gpus)
+    problems += missing_tools(conds)
+    if any((c.get("device") or "cpu") != "cpu" for c in conds) and shutil.which("nvidia-smi"):
+        gpus = subprocess.run(["nvidia-smi", "-L"], capture_output=True, text=True).stdout.strip()
+        log("GPUs:\n" + gpus)
     load = load_average()[0]
     cores = config.get("machine", {}).get("cores", 16)
     if load > max(2, 0.1 * cores):
@@ -273,13 +279,17 @@ def main():
             print(c["run_id"], " ".join(cc.beast_command(config, Path("beast.jar"), c, c["run_id"] + ".xml")))
         return
 
+    todo = [c for c in conds if not (cc.paths()["runs"] / c["run_id"] / "result.json").exists()]
+    problems = missing_tools(todo)
+    if problems:
+        sys.exit("\n".join("PROBLEM: " + p for p in problems))
+
     signal.signal(signal.SIGINT, interrupt)
     signal.signal(signal.SIGTERM, interrupt)
     if sys.platform == "darwin" and shutil.which("caffeinate"):
         # no idle sleep while this script runs (a sleeping Mac stalls the runs and spoils the timings)
         subprocess.Popen(["caffeinate", "-i", "-w", str(os.getpid())])
     jar, digest = frozen_jar(config)
-    todo = [c for c in conds if not (cc.paths()["runs"] / c["run_id"] / "result.json").exists()]
     hours = sum(float(c["minutes"]) for c in todo) / 60
     log(f"{len(todo)} of {len(conds)} runs to do, about {hours:.1f} hours")
     for cond in todo:
