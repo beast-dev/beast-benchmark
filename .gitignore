@@ -13,3 +13,9 @@ stl2_study/beast-frozen.jar
 stl2_study/conditions.csv
 archive/
 *.html
+chain_design/runs/
+chain_design/analysis/
+chain_design/pilot/
+chain_design/beast-frozen.jar
+chain_design/conditions.csv
+chain_design/check_tmp/

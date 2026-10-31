@@ -1,0 +1,56 @@
+{
+  "description": "tall-1 BEAGLE: how best to use the 16 performance cores (independent chains, threads, tempering)",
+  "beast_jar": "../BEAST/build/dist/beast.jar",
+  "xml": "Benchmarks/Benchmark-tall/benchmark-tall-1-min.xml",
+  "reference": "operator_study/reference/tall-1-min.json.gz",
+  "reference_stats": {
+    "source": "the four 300M-state reference runs (operator_study/runs/tall-1-min_300M_ref_*), 10% burn-in",
+    "joint_q01": -27202.49,
+    "mean": {"joint": -27068.04, "prior": -4973.70, "likelihood": -22094.33, "rootHeight": 7.6958,
+             "treeLength": 418.80, "constant.popSize": 11.5986, "clock.rate": 0.0057255},
+    "sd": {"joint": 59.00, "prior": 63.93, "likelihood": 34.36, "rootHeight": 0.41924,
+           "treeLength": 10.201, "constant.popSize": 0.59465, "clock.rate": 0.00018426}
+  },
+  "java_args": ["-Xms8g", "-Xmx8g", "-XX:+UseParallelGC", "-Djava.library.path=/opt/homebrew/lib"],
+  "beast_args": ["-citations_off", "-tests", "0", "-overwrite", "-beagle_CPU", "-beagle_SSE",
+                 "-beagle_double", "-thread_scheme", "serial", "-threads", "0"],
+  "cores": 16,
+  "main": {
+    "hours": 4.0,
+    "seeds": [1, 2, 3, 4],
+    "samples_per_chain": 1500,
+    "configs": {
+      "I1":  {"chains": 1,  "threads": "t_star"},
+      "I2":  {"chains": 2,  "threads": 8},
+      "I4":  {"chains": 4,  "threads": 4},
+      "I8":  {"chains": 8,  "threads": 2},
+      "I16": {"chains": 16, "threads": 1},
+      "T1":  {"chains": 1,  "tempered": 4, "threads": 4},
+      "T2":  {"chains": 2,  "tempered": 4, "threads": 2},
+      "T4":  {"chains": 4,  "tempered": 4, "threads": 1}
+    }
+  },
+  "tempering": {
+    "scheme": "deterministic_multiple",
+    "ladder_ratio": null,
+    "pilot_ladder_ratios": [0.995, 0.99, 0.98, 0.96],
+    "swap_block_seconds": 0.5
+  },
+  "pilot": {
+    "minutes": 5,
+    "repeats": 2,
+    "log_every": 5000,
+    "throughput_grid": [[1, 1], [1, 2], [1, 4], [1, 8], [1, 16],
+                        [2, 1], [2, 2], [2, 4], [2, 8],
+                        [4, 1], [4, 2], [4, 4],
+                        [8, 1], [8, 2],
+                        [16, 1]],
+    "tempering_minutes": 30,
+    "jvm_minutes": 10
+  },
+  "targets": {"continuous_ess": 200, "clade_ess": 100, "clade_tolerance": 0.05, "mean_tolerance_sd": 0.1},
+  "stuck": {"clade_deviation": 0.3},
+  "focal_clades": 50,
+  "curve_step_minutes": 5,
+  "stall_minutes": 10
+}
