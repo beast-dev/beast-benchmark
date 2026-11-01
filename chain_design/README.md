@@ -210,15 +210,19 @@ The same question for a different machine, with `study_darwin.json` (work direct
 |---|---|---|
 | C1 | CPU | 1 chain × t* threads (t* from the pilot, up to 40) |
 | C2 | CPU | 2 × 10 threads (one JVM per socket if the pilot shows binding helps by at least 10%) |
-| C4, C10, C20 | CPU | 4 × 5, 10 × 2, 20 × 1 |
+| C4, C20 | CPU | 4 × 5, 20 × 1 |
 | C40 | CPU | 40 × 1 on the hyper-threads, **only if** the pilot shows 40 × 1 gives at least 10% more than 20 × 1 |
 | CT | CPU | 1 tempering set of 1 + 3 chains, 5 threads each |
 | G1 | GPU | 1 chain on one GPU |
-| G2 | GPU | 2 chains, one per GPU |
 | G4 | GPU | 4 chains, two per GPU, **only if** the pilot shows that gives at least 10% more than G2 |
-| G6, G8 | GPU | 6 and 8 chains (three and four per GPU), each **only if** it gives at least 10% more than the next smaller one |
+| GB | GPU | the best of G8, G10, G12 and G16 (4, 5, 6 and 8 chains per GPU): the one with the highest total throughput among those that beat the next smaller one by at least 10% |
 | GT | GPU | 1 tempering set of 1 + 3 chains, two per GPU |
-| M | GPU + CPU | 2 GPU chains plus 4 CPU chains × 4 threads, **only if** that gives at least 10% more than G2 |
+| M8 | GPU + CPU | G8 plus 12 single-thread CPU chains on the remaining cores, **only if** that gives at least 10% more than G8 |
+
+The pilot also measures G2, G6, C10 and an earlier M (2 GPU chains plus 4 CPU chains × 4 threads)
+as steps on the way; the first darwin pilot showed G4 alone faster than that M, and the main grid
+was trimmed to about 250 h. A mixed run is stopped when its GPU chains are done (its CPU chains
+never reach their length).
 
 **How chains are placed:**
 - GPU chains use `-beagle_GPU -beagle_order` with resources 1 and 2 alternating (CPU chains in M get resource 0). Check the resource numbers with `beast -beagle_info` and set `machine.gpu_resources` if they differ.
@@ -243,8 +247,8 @@ nvidia-smi -L
 #    adjust java_args (-Djava.library.path) and machine.gpu_resources in study_darwin.json if needed
 #    use tmux or nohup for the long phases (there is no caffeinate on Linux)
 
-# 1. throughput pilot (about 8 h; 3 repeats, medians): CPU chains x threads, hyper-threads, NUMA binding,
-#    GPU sharing (1-4 chains per GPU), M, CT, GT. A spread over 10% is flagged: look for other load.
+# 1. throughput pilot (about 10 h; 3 repeats, medians): CPU chains x threads, hyper-threads, NUMA binding,
+#    GPU sharing (1-8 chains per GPU), M, M8, CT, GT. A spread over 10% is flagged: look for other load.
 python3 design.py throughput && python3 run_grid.py --check
 python3 run_grid.py --phase throughput
 python3 analyse.py pilot               # t*, totals, hyper-threading/GPU-sharing/NUMA gains, GPU %

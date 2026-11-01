@@ -87,11 +87,14 @@ def speed_key(cid, c, summary):
     return cid if c.get("tempered") else f"K{c['chains']}xt{threads}"
 
 
-def best_gpu_config(config, summary):
-    """The untempered GPU configuration of the main grid with the highest total throughput."""
+def best_gpu_config(config, summary, among=None):
+    """The untempered GPU configuration of the main grid (or of those named in among) with the
+    highest total throughput."""
     included = summary.get("include", {})
     candidates = {}
     for cid, c in config["main"]["configs"].items():
+        if among is not None and cid not in among:
+            continue
         if c.get("device") != "gpu" or c.get("tempered"):
             continue
         if c.get("include_if") and not included.get(c["include_if"], False):
@@ -159,6 +162,14 @@ def main_rows(config, summary):
     for seed in m["seeds"]:
         block = []
         for cid, c in m["configs"].items():
+            if c.get("candidate"):
+                continue  # only run as the best of its group
+            if c.get("best_of"):
+                group = c["best_of"]
+                cid = best_gpu_config(config, summary, among=group)
+                c = m["configs"][cid]
+                if seed == m["seeds"][0]:
+                    print(f"best of {', '.join(group)}: {cid}")
             if c.get("include_if") and not included.get(c["include_if"], False):
                 continue  # the pilot did not justify this configuration
             threads = summary["t_star"] if c["threads"] == "t_star" else c["threads"]

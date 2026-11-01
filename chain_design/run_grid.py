@@ -174,7 +174,10 @@ def run_one(config, jar, digest, cond):
         limit = float(cond["minutes"]) * 60
         # runs with a chain length finish by themselves (and then print their swap statistics);
         # the limit is only a backstop, with room for start-up (parsing several large models)
-        if cond.get("states"):
+        if cond.get("device") == "mixed" and cond.get("states"):
+            # the CPU chains never reach the GPU chains' length: stop when the GPU chains are done
+            limit = limit * 1.03 + 600
+        elif cond.get("states"):
             limit = limit * 1.25 + 600
         gpu_sampler = None
         if (cond.get("device") or "cpu") != "cpu" and shutil.which("nvidia-smi"):
