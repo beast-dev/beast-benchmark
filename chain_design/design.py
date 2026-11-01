@@ -87,9 +87,29 @@ def speed_key(cid, c, summary):
     return cid if c.get("tempered") else f"K{c['chains']}xt{threads}"
 
 
+def best_gpu_config(config, summary):
+    """The untempered GPU configuration of the main grid with the highest total throughput."""
+    included = summary.get("include", {})
+    candidates = {}
+    for cid, c in config["main"]["configs"].items():
+        if c.get("device") != "gpu" or c.get("tempered"):
+            continue
+        if c.get("include_if") and not included.get(c["include_if"], False):
+            continue
+        total = summary["totals"].get(speed_key(cid, c, summary))
+        if total is not None:
+            candidates[cid] = total
+    if not candidates:
+        sys.exit("no GPU throughput in pilot/summary.json: run the throughput pilot and analyse.py pilot")
+    return max(candidates, key=candidates.get)
+
+
 def mixing_rows(config, summary):
     m = config["pilot"]["mixing"]
     cid = m["config"]
+    if cid == "best_gpu":
+        cid = best_gpu_config(config, summary)
+        print(f"mixing pilot on {cid}, the GPU configuration with the most states per second in total")
     c = config["main"]["configs"][cid]
     per_chain = speed(summary, speed_key(cid, c, summary))
     states = int(per_chain * m["hours"] * 3600 * 1.02)

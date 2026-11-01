@@ -30,8 +30,10 @@
       "G1":  {"chains": 1,  "device": "gpu", "gpus": 1, "threads": 1, "speed_key": "G1"},
       "G2":  {"chains": 2,  "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "G2"},
       "G4":  {"chains": 4,  "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "G4", "include_if": "gpu_sharing_gain"},
+      "G6":  {"chains": 6,  "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "G6", "include_if": "gpu_sharing_gain_3"},
+      "G8":  {"chains": 8,  "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "G8", "include_if": "gpu_sharing_gain_4"},
       "GT":  {"chains": 1,  "tempered": 4, "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "GT"},
-      "M":   {"chains": 6,  "device": "mixed", "gpu_chains": 2, "gpus": 2, "threads": 4, "speed_key": "M"}
+      "M":   {"chains": 6,  "device": "mixed", "gpu_chains": 2, "gpus": 2, "threads": 4, "speed_key": "M", "include_if": "mixed_gain"}
     }
   },
   "tempering": {
@@ -42,7 +44,7 @@
   },
   "pilot": {
     "minutes": 8,
-    "repeats": 2,
+    "repeats": 3,
     "log_every": 2000,
     "throughput": [
       {"id": "K1xt5",  "chains": 1,  "threads": 5},
@@ -60,16 +62,21 @@
       {"id": "G4on1",  "chains": 4,  "device": "gpu", "gpus": 1, "threads": 1},
       {"id": "G2",     "chains": 2,  "device": "gpu", "gpus": 2, "threads": 1},
       {"id": "G4",     "chains": 4,  "device": "gpu", "gpus": 2, "threads": 1},
+      {"id": "G6",     "chains": 6,  "device": "gpu", "gpus": 2, "threads": 1},
+      {"id": "G8",     "chains": 8,  "device": "gpu", "gpus": 2, "threads": 1},
       {"id": "M",      "chains": 6,  "device": "mixed", "gpu_chains": 2, "gpus": 2, "threads": 4},
       {"id": "CT",     "chains": 1,  "tempered": 4, "threads": 5},
       {"id": "GT",     "chains": 1,  "tempered": 4, "device": "gpu", "gpus": 2, "threads": 1}
     ],
-    "mixing": {"config": "G2", "hours": 24, "seed": 900},
+    "mixing": {"config": "best_gpu", "hours": 24, "seed": 900},
     "tempering_minutes": 40,
     "tempering_configs": ["GT", "CT"],
     "gains": {
       "hyperthreading_gain": ["K40xt1", "K20xt1", 1.10],
       "gpu_sharing_gain": ["G4", "G2", 1.10],
+      "gpu_sharing_gain_3": ["G6", "G4", 1.10],
+      "gpu_sharing_gain_4": ["G8", "G6", 1.10],
+      "mixed_gain": ["M", "G2", 1.10],
       "numa_gain": ["K2xt10_numa", "K2xt10", 1.10]
     }
   },

@@ -478,9 +478,10 @@ def analyse_pilot(config):
 
     summary = dict(speeds={}, speed_spread={}, totals={}, jvm=jvm, tempering=tempering, gpu_utilisation=gpu)
     for key, values in speeds.items():
-        summary["speeds"][key] = float(np.mean(values))
-        summary["speed_spread"][key] = float((max(values) - min(values)) / np.mean(values)) if len(values) > 1 else None
-        summary["totals"][key] = float(np.mean(totals[key]))
+        # medians, so that one disturbed repeat cannot decide t* or a gain
+        summary["speeds"][key] = float(np.median(values))
+        summary["speed_spread"][key] = float((max(values) - min(values)) / np.median(values)) if len(values) > 1 else None
+        summary["totals"][key] = float(np.median(totals[key]))
     singles = {}
     for key, v in summary["speeds"].items():
         m = re.fullmatch(r"K1xt(\d+)", key)
@@ -514,13 +515,14 @@ def analyse_pilot(config):
     with open(cc.paths()["pilot_summary"], "w") as f:
         json.dump(summary, f, indent=1)
 
-    print("\nStates per second (per chain; total over chains; spread = (max - min) / mean over repeats)")
+    print("\nStates per second (per chain; total over chains; median over repeats; spread = (max - min) / median)")
     for key in sorted(summary["speeds"]):
         spread = summary["speed_spread"][key]
         util = gpu.get(key)
         util_text = f"  GPU % {util[-1]}" if util and util[-1] else ""
         print(f"  {key:14} {summary['speeds'][key]:9.0f} {summary['totals'][key]:10.0f}  "
-              f"spread {spread if spread is None else round(spread, 3)}{util_text}")
+              f"spread {spread if spread is None else round(spread, 3)}{util_text}"
+              f"{'  <- repeats disagree: check for other load' if spread and spread > 0.1 else ''}")
     if "t_star" in summary:
         print(f"best threads for one chain (t*): {summary['t_star']}")
     for name, ratio in summary.get("gain_ratios", {}).items():
