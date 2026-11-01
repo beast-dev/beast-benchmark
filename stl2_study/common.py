@@ -107,6 +107,8 @@ def read_log(path: Path):
             if columns is None:
                 columns = [p.strip() for p in parts]
                 continue
+            if len(parts) != len(columns):
+                continue  # a row cut short (the run was stopped while BEAST was writing it)
             try:
                 rows.append([float(p) for p in parts])
             except ValueError:
