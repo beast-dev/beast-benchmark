@@ -123,8 +123,24 @@ def run_processes(cmds, cwds, stdout_paths, limit_seconds, chain_logs, stall_sec
     return [p.returncode for p, _ in procs], stopped, stalled, start, end, times, slept
 
 
+def stray_beasts():
+    """Other BEAST JVMs on this machine (for example orphans of a run_grid.py that was killed)."""
+    out = subprocess.run(["ps", "-eo", "pid=,args="], capture_output=True, text=True).stdout
+    stray = []
+    for line in out.splitlines():
+        fields = line.split()
+        if len(fields) > 1 and os.path.basename(fields[1]) == "java" and "dr.app.beast.BeastMain" in line:
+            stray.append(line.strip())
+    return stray
+
+
 def run_one(config, jar, digest, cond):
     run_id = cond["run_id"]
+    stray = stray_beasts()
+    if stray:
+        log("PROBLEM: other BEAST processes are running (kill them, then start again):\n  " + "\n  ".join(stray))
+        stopping.set()
+        return
     run_dir = cc.paths()["runs"] / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     lock = open(run_dir / "run.lock", "w")
@@ -227,10 +243,11 @@ def check(config, conds):
         problems.append(f"no BEAST jar at {jar}")
     if not (cc.REPO_DIR / config["xml"]).exists():
         problems.append(f"no XML {config['xml']}")
-    try:
-        cc.load_reference(config)
-    except Exception as e:  # noqa: BLE001
-        problems.append(f"reference: {e}")
+    if config.get("reference") != "pooled":  # a pooled reference is built from the runs themselves
+        try:
+            cc.load_reference(config)
+        except Exception as e:  # noqa: BLE001
+            problems.append(f"reference: {e}")
     tmp = cc.STUDY_DIR / "check_tmp"
     tmp.mkdir(exist_ok=True)
     try:
@@ -242,6 +259,8 @@ def check(config, conds):
     if any((c.get("device") or "cpu") != "cpu" for c in conds) and shutil.which("nvidia-smi"):
         gpus = subprocess.run(["nvidia-smi", "-L"], capture_output=True, text=True).stdout.strip()
         log("GPUs:\n" + gpus)
+    for line in stray_beasts():
+        problems.append("another BEAST process is running: " + line)
     load = load_average()[0]
     cores = config.get("machine", {}).get("cores", 16)
     if load > max(2, 0.1 * cores):
@@ -286,6 +305,8 @@ def main():
 
     signal.signal(signal.SIGINT, interrupt)
     signal.signal(signal.SIGTERM, interrupt)
+    # a closed terminal must stop the runs too, or the JVMs (in their own sessions) are orphaned
+    signal.signal(signal.SIGHUP, interrupt)
     if sys.platform == "darwin" and shutil.which("caffeinate"):
         # no idle sleep while this script runs (a sleeping Mac stalls the runs and spoils the timings)
         subprocess.Popen(["caffeinate", "-i", "-w", str(os.getpid())])
