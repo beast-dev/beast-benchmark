@@ -16,25 +16,26 @@
     "gpu_sampling_seconds": 30
   },
   "main": {
-    "hours": 8.0,
+    "hours": 16.0,
     "seeds": [1, 2, 3],
     "samples_per_chain": 1500,
     "configs": {
-      "C1":  {"chains": 1,  "threads": "t_star"},
-      "C2":  {"chains": 2,  "threads": 10, "speed_key": "K2xt10", "numa_split_if": "numa_gain"},
-      "C4":  {"chains": 4,  "threads": 5,  "speed_key": "K4xt5"},
+      "C1":  {"chains": 1,  "threads": "t_star", "pilot_only": true},
+      "C2":  {"chains": 2,  "threads": 10, "speed_key": "K2xt10", "numa_split_if": "numa_gain", "pilot_only": true},
+      "C4":  {"chains": 4,  "threads": 5,  "speed_key": "K4xt5", "pilot_only": true},
       "C20": {"chains": 20, "threads": 1,  "speed_key": "K20xt1"},
-      "C40": {"chains": 40, "threads": 1,  "speed_key": "K40xt1", "include_if": "hyperthreading_gain"},
-      "CT":  {"chains": 1,  "tempered": 4, "threads": 5, "speed_key": "CT"},
+      "C40": {"chains": 40, "threads": 1,  "speed_key": "K40xt1", "include_if": "hyperthreading_gain", "pilot_only": true},
+      "CT":  {"chains": 1,  "tempered": 4, "threads": 5, "speed_key": "CT", "pilot_only": true},
       "G1":  {"chains": 1,  "device": "gpu", "gpus": 1, "threads": 1, "speed_key": "G1"},
-      "G4":  {"chains": 4,  "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "G4", "include_if": "gpu_sharing_gain"},
+      "G4":  {"chains": 4,  "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "G4", "include_if": "gpu_sharing_gain", "pilot_only": true},
       "G8":  {"chains": 8,  "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "G8", "candidate": true},
       "G10": {"chains": 10, "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "G10", "include_if": "gpu_sharing_gain_5", "candidate": true},
       "G12": {"chains": 12, "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "G12", "include_if": "gpu_sharing_gain_6", "candidate": true},
       "G16": {"chains": 16, "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "G16", "include_if": "gpu_sharing_gain_8", "candidate": true},
       "GB":  {"best_of": ["G8", "G10", "G12", "G16"]},
       "GT":  {"chains": 1,  "tempered": 4, "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "GT"},
-      "M8":  {"chains": 20, "device": "mixed", "gpu_chains": 8, "gpus": 2, "threads": 1, "speed_key": "M8", "include_if": "mixed_gain"}
+      "GT3": {"chains": 3,  "tempered": 4, "device": "gpu", "gpus": 2, "threads": 1, "speed_key": "GT3"},
+      "M8":  {"chains": 20, "device": "mixed", "gpu_chains": 8, "gpus": 2, "threads": 1, "speed_key": "M8", "include_if": "mixed_gain", "pilot_only": true}
     }
   },
   "tempering": {
@@ -71,7 +72,8 @@
       {"id": "M",      "chains": 6,  "device": "mixed", "gpu_chains": 2, "gpus": 2, "threads": 4},
       {"id": "M8",     "chains": 20, "device": "mixed", "gpu_chains": 8, "gpus": 2, "threads": 1},
       {"id": "CT",     "chains": 1,  "tempered": 4, "threads": 5},
-      {"id": "GT",     "chains": 1,  "tempered": 4, "device": "gpu", "gpus": 2, "threads": 1}
+      {"id": "GT",     "chains": 1,  "tempered": 4, "device": "gpu", "gpus": 2, "threads": 1},
+      {"id": "GT3",    "chains": 3,  "tempered": 4, "device": "gpu", "gpus": 2, "threads": 1}
     ],
     "mixing": {"config": "best_gpu", "hours": 24, "seed": 900},
     "tempering_minutes": 40,

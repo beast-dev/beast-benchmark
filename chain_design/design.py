@@ -164,6 +164,8 @@ def main_rows(config, summary):
         for cid, c in m["configs"].items():
             if c.get("candidate"):
                 continue  # only run as the best of its group
+            if c.get("pilot_only"):
+                continue  # measured in the pilots, left out of the main grid
             if c.get("best_of"):
                 group = c["best_of"]
                 cid = best_gpu_config(config, summary, among=group)

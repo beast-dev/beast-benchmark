@@ -219,6 +219,14 @@ The same question for a different machine, with `study_darwin.json` (work direct
 | GT | GPU | 1 tempering set of 1 + 3 chains, two per GPU |
 | M8 | GPU + CPU | G8 plus 12 single-thread CPU chains on the remaining cores, **only if** that gives at least 10% more than G8 |
 
+**Refocused after the mixing run (2026-11-03).** In 24 h on G10, burn-in took 27 minutes and the
+continuous ESS reached 1086, but the worst-clade ESS reached only 27 (about 1 per hour, so about 105 h
+to 100) and 6 of the 10 chains were stuck on clades. Runs of 8–10 h would leave every configuration
+censored on the clade target, so the main grid became **C20, G1, G10 (GB), GT and GT3** (three
+tempered sets of 1 + 3 chains, 12 GPU instances) × 3 seeds × 16 h = 240 h. The question is now what
+improves topology mixing per hour: more chains, tempering, or both. The other configurations are
+kept in `study_darwin.json` as `"pilot_only"` (their pilot speeds are part of the results).
+
 The pilot also measures G2, G6, C10 and an earlier M (2 GPU chains plus 4 CPU chains × 4 threads)
 as steps on the way; the first darwin pilot showed G4 alone faster than that M, and the main grid
 was trimmed to about 250 h. A mixed run is stopped when its GPU chains are done (its CPU chains
