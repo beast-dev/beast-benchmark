@@ -103,7 +103,7 @@ def load_reference(config) -> dict:
 
 def ladder(ratio: float, chains: int):
     """Inverse temperatures of the heated chains of a set: ratio, ratio^2, ..."""
-    return [round(ratio ** i, 6) for i in range(1, chains)]
+    return [round(ratio ** i, 4) for i in range(1, chains)]
 
 
 def make_xml(config, cond, run_dir: Path) -> Path:

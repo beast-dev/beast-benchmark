@@ -130,7 +130,7 @@ def ladder_ratios(config, summary):
         if not sd:
             sys.exit("no joint SD in pilot/summary.json: run the mixing pilot and analyse.py pilot first")
         # neighbouring rungs swap well when the change in beta times the joint's SD is about 1
-        return [round(1 - f / sd, 5) for f in t["ladder_sd_factors"]]
+        return [round(1 - f / sd, 3) for f in t["ladder_sd_factors"]]
     return t["pilot_ladder_ratios"]
 
 

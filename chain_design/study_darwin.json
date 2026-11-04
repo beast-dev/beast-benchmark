@@ -41,7 +41,7 @@
   },
   "tempering": {
     "scheme": "deterministic_multiple",
-    "ladder_ratio": 0.98173,
+    "ladder_ratio": 0.982,
     "ladder_sd_factors": [0.5, 1.0, 2.0],
     "swap_block_seconds": 0.5
   },

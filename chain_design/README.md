@@ -230,9 +230,9 @@ kept in `study_darwin.json` as `"pilot_only"` (their pilot speeds are part of th
 **Tempering (2026-11-04).** The ladder pilot's CT swap rates were confounded by burn-in. In
 40 minutes at 328 states/s a CT chain gets about 0.8M states, short of big-2's burn-in of about
 1.8M, so its chains never sat at the posterior together and rarely swapped. GT (1358 states/s)
-swapped 27.6% between neighbours at ratio 0.98173, so `tempering.ladder_ratio` is fixed at 0.98173.
+swapped 27.6% between neighbours at ratio 0.98173, so `tempering.ladder_ratio` is fixed at 0.982 (rounded; slightly gentler).
 A 4-rung set at that spacing only reaches β = 0.946, so GT3 was replaced in the main grid by
-**GT12**: one ladder of 12 rungs on the same 12 GPU instances, reaching β = 0.816. The main grid is
+**GT12**: one ladder of 12 rungs on the same 12 GPU instances, reaching β = 0.819. The main grid is
 **C20, G1, G10, GT and GT12** × 3 seeds × 16 h.
 
 The pilot also measures G2, G6, C10 and an earlier M (2 GPU chains plus 4 CPU chains × 4 threads)
