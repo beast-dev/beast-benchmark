@@ -13,7 +13,7 @@ Arguments:
 Options:
     --seed SEED       Random seed passed to BEAST (default: value from XML header, or 1234)
     --beast PATH      Path to beast executable or jar (default: 'beast' on PATH)
-    --states STATES   Override number of MCMC states from XML header (for shorter test runs)
+    --states STATES   Chain length to scale the progress bar against; does NOT shorten the run
     --prefix PREFIX   Override the output file prefix (default: auto timestamp)
     --no-overwrite    Do not pass -overwrite to BEAST
     --profile [ASPECTS]
@@ -118,8 +118,16 @@ STATE_ROW_RE = re.compile(r'^(\d+)\t')
 BEAST_RUNTIME_RE = re.compile(r'^([\d.]+(?:[Ee][-+]?\d+)?)\s+(seconds|minutes|hours|days)\s*$')
 MINUTES_PER_UNIT = {"seconds": 1.0 / 60.0, "minutes": 1.0, "hours": 60.0, "days": 1440.0}
 
-# "X minutes/million states" embedded in state rows (last field)
-RATE_RE = re.compile(r'([\d.]+)\s+minutes/million states')
+# "X <unit>/million states" embedded in state rows (last field). MCLogger picks the unit to
+# suit the rate -- hours at 0.1 h/Mstate and above, seconds below 0.1 min/Mstate -- so all
+# three have to be matched and normalised, or the slow and fast runs report no rate at all.
+RATE_RE = re.compile(r'([\d.]+)\s+(seconds|minutes|hours)/million states')
+MINUTES_PER_RATE_UNIT = {"seconds": 1.0 / 60.0, "minutes": 1.0, "hours": 60.0}
+
+
+def rate_in_minutes(match) -> float:
+    """Minutes per million states, from a RATE_RE match in whichever unit BEAST used."""
+    return float(match.group(1)) * MINUTES_PER_RATE_UNIT[match.group(2)]
 
 # BEAST / BEAGLE version strings
 BEAST_VERSION_RE   = re.compile(r'BEAST (v[\d.]+)')
@@ -198,12 +206,12 @@ def parse_stdout(text: str) -> dict:
         last_line_content = '\t'.join(rows[-1].get(c, '') for c in columns)
         rm = RATE_RE.search(last_line_content)
         if rm:
-            final_rate = float(rm.group(1))
+            final_rate = rate_in_minutes(rm)
         # also check the raw lines
         for line in reversed(lines):
             rm = RATE_RE.search(line)
             if rm:
-                final_rate = float(rm.group(1))
+                final_rate = rate_in_minutes(rm)
                 break
 
     return {
@@ -718,7 +726,8 @@ def main():
     parser.add_argument("--beast",  default="beast",
                         help="Path to beast executable (default: 'beast' on PATH)")
     parser.add_argument("--states", type=int, default=None,
-                        help="Override MCMC length (for quick test runs)")
+                        help="Chain length to scale the progress bar against; does NOT shorten "
+                             "the run -- the length always comes from the XML")
     parser.add_argument("--prefix", default=None,
                         help="Override the run directory name (default: {type}_{number}_{model}_{timestamp})")
     parser.add_argument("--benchmarks", default=None, metavar="DIR",
@@ -844,7 +853,7 @@ def main():
             state_num = int(m.group(1))
             rm = RATE_RE.search(stripped)
             if rm:
-                current_rate = rm.group(1) + " min/Mstates"
+                current_rate = f"{rate_in_minutes(rm):.3g} min/Mstates"
             elapsed_s = (datetime.now() - start_time).total_seconds()
             print_progress(state_num, total_states, current_rate, elapsed_s)
 

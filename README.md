@@ -7,6 +7,10 @@ This folder contains the benchmarking infrastructure for measuring and validatin
 ```
 beast-benchmark/
 ├── benchmark.py          # The benchmark runner script
+├── calibrate.py          # Measures speed and proposes chain lengths
+├── apply_lengths.py      # Writes those chain lengths into the XMLs
+├── run_all_models.sh     # All 42 runs: 7 datasets x 6 models
+├── run_all_gpu.sh        # The 21 BEAGLE runs on the GPU (no mat)
 ├── README.md             # This file
 ├── Benchmarks/           # Benchmark XML files, organised by type
 │   ├── Benchmark-big/
@@ -124,7 +128,8 @@ positional arguments:
 optional arguments:
   --seed SEED       Random seed (default: value from XML header, or 1234)
   --beast BEAST     Path to beast executable (default: 'beast' on PATH)
-  --states STATES   Override MCMC chain length (for quick test runs)
+  --states STATES   Chain length to scale the progress bar against; does
+                    NOT shorten the run (the length comes from the XML)
   --prefix PREFIX   Override the run directory name
                     (default: {machine_}{type}_{number}_{model}_{timestamp})
   --benchmarks DIR  Path to Benchmarks folder
@@ -135,6 +140,44 @@ optional arguments:
                     output file names
   --no-overwrite    Do not pass -overwrite to BEAST
 ```
+
+## Setting the chain lengths
+
+The benchmarks measure wall-clock time and states per second, so they are most useful when
+they all take about the same time — a run that takes 40 minutes tells you no more than one
+that takes 10, and makes a full sweep cost a day. `calibrate.py` works out the chain length
+that hits a target time on the machine you are on.
+
+It does not run a chain to the end. It starts BEAST, waits for the screen log, times a
+stretch of states, and kills it:
+
+```bash
+python3 calibrate.py --target 600 --beast /path/to/beast --machine machine1
+```
+
+That writes `calibration.csv` with, per benchmark, the startup time (JVM, XML parsing,
+BEAGLE setup, first likelihood), the measured minutes per million states, and the chain
+length those imply:
+
+```
+states = (target - startup) / seconds_per_state
+```
+
+rounded to two significant figures and a whole multiple of 1000. Then:
+
+```bash
+python3 apply_lengths.py --dry-run     # show what would change
+python3 apply_lengths.py               # change it
+```
+
+`apply_lengths.py` sets all five places that have to agree — `chainLength` on `<mcmc>`,
+`logEvery` on the screen, file and tree logs, and the `MCMC length` and `Logging every`
+header lines — keeping 1000 samples per run. It also drops the `Final Joint density` line,
+because that value belongs to the old chain length; run the sweep again to replace it.
+
+**Chain lengths are machine-specific.** Calibrate on the machine the benchmarks are for.
+The GPU runs are not separately calibrated: one XML holds one chain length, and it is set
+for the CPU sweep, so a GPU run of the same XML will not take the target time.
 
 ## Output files
 
@@ -213,9 +256,14 @@ A failure indicates that either the BEAST implementation has changed in a way th
 1. Create a folder `Benchmarks/Benchmark-{type}/`.
 2. Place the XML file as `benchmark-{type}-{number}-{model}.xml`.
 3. Add the structured header comment (see format above).
-4. Run once with the canonical seed to obtain the initial and final joint densities:
+4. Set the chain length so the run takes about as long as the others:
+   ```bash
+   python3 calibrate.py {type} {number} {model} --target 600
+   python3 apply_lengths.py
+   ```
+5. Run once with the canonical seed to obtain the initial and final joint densities:
    ```bash
    python3 benchmark.py {type} {number} {model} --seed 1234
    ```
-5. Copy the reported joint densities into the XML header.
-6. Re-run to confirm both values show `✓ PASS`.
+6. Copy the reported joint densities into the XML header.
+7. Re-run to confirm both values show `✓ PASS`.
