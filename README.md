@@ -172,6 +172,20 @@ python3 apply_lengths.py --dry-run     # show what would change
 python3 apply_lengths.py               # change it
 ```
 
+`--beast` takes the BEAST launcher script, or a `.jar`, or a bare name found on `PATH`; a
+relative path is fine, as both runners make it absolute before running BEAST in the run
+directory. A `.jar` is run with `java -jar`, which passes no JVM options, so BEAGLE has to be
+somewhere Java already looks — otherwise BEAST exits with "No acceptable BEAGLE library
+plugins found" and only the `mat` benchmarks run. Point `JDK_JAVA_OPTIONS` at it if needed:
+
+```bash
+JDK_JAVA_OPTIONS=-Djava.library.path=/usr/local/lib python3 calibrate.py --beast ./beast.jar
+```
+
+`calibrate.py` says `NO BEAGLE` against any non-`mat` benchmark that ran without it, and
+lists them again at the end: such a run measures the Java likelihood, so its rate — and the
+chain length taken from it — would not be comparable with the others.
+
 `apply_lengths.py` sets all five places that have to agree — `chainLength` on `<mcmc>`,
 `logEvery` on the screen, file and tree logs, and the `MCMC length` and `Logging every`
 header lines — keeping 1000 samples per run. It also drops the `Final Joint density` line,

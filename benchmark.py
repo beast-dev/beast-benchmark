@@ -77,6 +77,9 @@ FIELD_PATTERNS = {
 }
 
 
+from benchmarks import beast_command
+
+
 def parse_xml_header(xml_path: Path) -> dict:
     """Return a dict of metadata fields parsed from the structured XML header comment."""
     try:
@@ -790,8 +793,7 @@ def main():
     sys_info = get_system_info()
 
     # Build BEAST command (absolute XML path; cwd will be run_dir)
-    cmd = [
-        args.beast,
+    cmd = beast_command(args.beast) + [
         "-seed", str(seed),
         "-citations_off",
         "-tests", "0",

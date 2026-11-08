@@ -8,6 +8,7 @@ shell scripts so that adding or removing a benchmark XML needs no edit to them:
     python3 benchmarks.py          # one "type number model" per line
 """
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -17,6 +18,21 @@ TYPES = ["small", "big", "tall", "wide", "medium"]
 MODELS = ["min", "mat", "gamma", "gamma-mat", "skygrid", "skygrid-mat"]
 
 BENCHMARKS = Path(__file__).resolve().parent / "Benchmarks"
+
+
+def beast_command(beast: str) -> list:
+    """The command that runs BEAST, from whatever --beast was given.
+
+    A .jar is run with `java -jar`, and any path is made absolute: both runners
+    start BEAST with cwd set to the run directory, so a relative path would not
+    resolve there. A bare name is left alone to be found on PATH.
+    """
+    path = Path(beast)
+    if path.suffix == ".jar":
+        return ["java", "-jar", str(path.resolve())]
+    if os.sep in beast or beast.startswith("."):
+        return [str(path.resolve())]
+    return [beast]
 
 
 def xml_path(benchmarks: Path, btype: str, number, model: str) -> Path:

@@ -21,6 +21,7 @@ lengths to apply_lengths.py.
 """
 
 import argparse
+import collections
 import csv
 import re
 import subprocess
@@ -31,10 +32,11 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from benchmarks import discover, xml_path
+from benchmarks import beast_command, discover, xml_path
 
 STATE_HEADER_RE = re.compile(r'^state\t')
 STATE_ROW_RE = re.compile(r'^(\d+)\t')
+BEAGLE_RE = re.compile(r'Using BEAGLE library')
 
 
 def round_states(states: float) -> int:
@@ -49,11 +51,14 @@ def round_states(states: float) -> int:
 def time_one(xml: Path, beast: str, seed: int, measure: float, max_wait: float,
              extra_args: list) -> dict:
     """Run BEAST briefly and return startup time and seconds per state."""
-    cmd = [beast, "-seed", str(seed), "-citations_off", "-tests", "0", "-overwrite"]
+    cmd = beast_command(beast) + ["-seed", str(seed), "-citations_off", "-tests", "0",
+                                  "-overwrite"]
     cmd += extra_args
     cmd.append(str(xml))
 
     samples = []          # (state, elapsed seconds since launch)
+    tail = collections.deque(maxlen=20)   # kept so a failure can say what BEAST said
+    used_beagle = False
     header_found = False
     started = time.monotonic()
     startup = None
@@ -64,7 +69,7 @@ def time_one(xml: Path, beast: str, seed: int, measure: float, max_wait: float,
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                     text=True, bufsize=1, cwd=workdir)
         except FileNotFoundError:
-            return {"error": f"beast not found: {beast}"}
+            return {"error": f"cannot run: {' '.join(cmd[:2])}"}
 
         # If BEAST ever stops producing output the read below would block for good,
         # so give it a hard stop as well as the per-line check.
@@ -74,9 +79,14 @@ def time_one(xml: Path, beast: str, seed: int, measure: float, max_wait: float,
             for line in proc.stdout:
                 elapsed = time.monotonic() - started
                 stripped = line.rstrip("\n")
+                if stripped.strip():
+                    tail.append(stripped.strip())
 
                 if elapsed > max_wait:
                     break
+
+                if BEAGLE_RE.search(stripped):
+                    used_beagle = True
 
                 if STATE_HEADER_RE.match(stripped):
                     header_found = True
@@ -96,7 +106,17 @@ def time_one(xml: Path, beast: str, seed: int, measure: float, max_wait: float,
             proc.wait()
 
     if not samples:
-        error = f"no state rows within {max_wait:.0f}s"
+        # Distinguish a crash from a run that was simply too slow to reach state 0:
+        # BEAST exits outright when BEAGLE is missing, and saying "timed out" for that
+        # sends you looking in the wrong place.
+        ran_for = time.monotonic() - started
+        if ran_for < max_wait - 1:
+            message = next((t for t in reversed(tail)
+                            if "Exception" in t or "Error" in t or "Fatal" in t), None)
+            message = message or (tail[-1] if tail else "no output")
+            error = f"BEAST exited after {ran_for:.0f}s: {message[:160]}"
+        else:
+            error = f"no state rows within {max_wait:.0f}s"
 
     if error:
         return {"error": error}
@@ -116,6 +136,7 @@ def time_one(xml: Path, beast: str, seed: int, measure: float, max_wait: float,
         "sec_per_state": d_time / d_states,
         "rows_used": len(samples),
         "states_timed": d_states,
+        "used_beagle": used_beagle,
     }
 
 
@@ -177,8 +198,12 @@ def main():
         proposed = round_states(usable / result["sec_per_state"])
         min_per_mstate = result["sec_per_state"] * 1e6 / 60.0
 
+        # the mat models do not use BEAGLE at all; for the rest, falling back to the
+        # Java likelihood would quietly make the rate, and so the length, wrong
+        beagle_warning = "" if result["used_beagle"] or model.endswith("mat") else "  NO BEAGLE"
+
         print(f"{min_per_mstate:8.3f} min/Mstate  startup {result['startup_s']:6.1f}s"
-              f"  ->{proposed:>12,} states")
+              f"  ->{proposed:>12,} states{beagle_warning}")
 
         rows.append({
             "benchmark": name, "type": btype, "number": number, "model": model,
@@ -189,6 +214,7 @@ def main():
             "states_timed": result["states_timed"],
             "rows_used": result["rows_used"],
             "target_s": args.target,
+            "used_beagle": result["used_beagle"],
             "proposed_states": proposed,
             "proposed_log_every": proposed // 1000,
             "error": "",
@@ -196,8 +222,8 @@ def main():
 
     out = Path(args.out)
     fields = ["benchmark", "type", "number", "model", "machine", "timestamp", "startup_s",
-              "min_per_mstate", "states_timed", "rows_used", "target_s", "proposed_states",
-              "proposed_log_every", "error"]
+              "min_per_mstate", "states_timed", "rows_used", "target_s", "used_beagle",
+              "proposed_states", "proposed_log_every", "error"]
     with open(out, "w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()
@@ -205,7 +231,13 @@ def main():
             writer.writerow(row)
 
     ok = [r for r in rows if not r.get("error")]
+    no_beagle = [r for r in ok if not r["used_beagle"] and not r["model"].endswith("mat")]
     print(f"\nWrote {out.name}: {len(ok)} measured, {len(rows) - len(ok)} failed")
+    if no_beagle:
+        print(f"WARNING: {len(no_beagle)} BEAGLE benchmark(s) ran without BEAGLE -- "
+              f"the rates, and so the lengths, are not comparable:")
+        for r in no_beagle:
+            print(f"  {r['benchmark']}")
     if ok:
         print("Apply with:  python3 apply_lengths.py")
 
