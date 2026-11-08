@@ -7,10 +7,12 @@ This folder contains the benchmarking infrastructure for measuring and validatin
 ```
 beast-benchmark/
 ├── benchmark.py          # The benchmark runner script
+├── benchmarks.py         # Finds the XMLs; shared by the scripts below
 ├── calibrate.py          # Measures speed and proposes chain lengths
 ├── apply_lengths.py      # Writes those chain lengths into the XMLs
-├── run_all_models.sh     # All 42 runs: 7 datasets x 6 models
-├── run_all_gpu.sh        # The 21 BEAGLE runs on the GPU (no mat)
+├── run_all.sh            # The `min` set only
+├── run_all_models.sh     # Every XML, every model variant
+├── run_all_gpu.sh        # Every BEAGLE XML on the GPU (no mat)
 ├── README.md             # This file
 ├── Benchmarks/           # Benchmark XML files, organised by type
 │   ├── Benchmark-big/
@@ -252,6 +254,10 @@ Both the initial and final joint log-densities are **fully deterministic** for a
 A failure indicates that either the BEAST implementation has changed in a way that alters the likelihood or MCMC trajectory, or that the benchmark XML header values need updating.
 
 ## Adding a new benchmark
+
+The runners find the XMLs through `benchmarks.py`, so a new file is picked up by
+`run_all_models.sh` and `run_all_gpu.sh` without editing them; a removed one disappears from
+both. The name has to follow the convention above for that to work.
 
 1. Create a folder `Benchmarks/Benchmark-{type}/`.
 2. Place the XML file as `benchmark-{type}-{number}-{model}.xml`.
