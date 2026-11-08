@@ -37,7 +37,7 @@ BENCHMARKS  = _SCRIPT_DIR / "Benchmarks"
 # quantile of the root height pooled over the M5 Max runs of 2026-10-18/19 (BEAGLE -min and MAT -mat,
 # 10% burn-in), rounded up to 2 significant figures. Those quantiles were:
 #   small-1 1152 (BEAGLE) / 1134 (MAT)      small-2 7.53 / 7.55       tall-1 8.73 / 8.53
-#   big-1   0.873 / 0.794                   big-2   2.87 / 2.23       big-3  1.08 / 0.969
+#   big-1   0.873 / 0.794                   big-2   2.87 / 2.23
 #   wide-1  0.0200 / 0.0200 (undated tips: substitutions per site)
 CUT_OFFS = {
     "small-1": 1200.0,
@@ -45,7 +45,6 @@ CUT_OFFS = {
     "tall-1":  8.8,
     "big-1":   0.88,
     "big-2":   2.9,
-    "big-3":   1.1,
     "wide-1":  0.020,
 }
 
