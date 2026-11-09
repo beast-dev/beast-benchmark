@@ -14,11 +14,10 @@ Operators:
   - SubtreeLeap on tree with weight 976.0
   - fixedHeightSPR on tree with weight 97.6
   - upDown on rate and popSize with weight 3.0
-MCMC length: 3000000 
-Logging every: 3000
+MCMC length: 1400000 
+Logging every: 1400
 Seed: 1234
 Initial Joint density: -78550.7397
-Final Joint density: -56790.3981
 <-->
 
 <beast version="10.5.0">
@@ -7011,7 +7010,7 @@ Final Joint density: -56790.3981
 	
 
 	<!-- Define MCMC                                                             -->
-	<mcmc id="mcmc" chainLength="3000000" autoOptimize="true" operatorAnalysis="benchmark-big-1.ops">
+	<mcmc id="mcmc" chainLength="1400000" autoOptimize="true" operatorAnalysis="benchmark-big-1.ops">
 		<joint id="joint">
 			<prior id="prior">
 				<ctmcScalePrior>
@@ -7035,7 +7034,7 @@ Final Joint density: -56790.3981
 		<operators idref="operators"/>
 
 		<!-- write log to screen                                                     -->
-		<log id="screenLog" logEvery="3000">
+		<log id="screenLog" logEvery="1400">
 			<column label="Joint" dp="4" width="12">
 				<joint idref="joint"/>
 			</column>
@@ -7054,7 +7053,7 @@ Final Joint density: -56790.3981
 		</log>
 
 		<!-- write log to file                                                       -->
-		<log id="fileLog" logEvery="3000" fileName="benchmark-big-1.log" overwrite="false">
+		<log id="fileLog" logEvery="1400" fileName="benchmark-big-1.log" overwrite="false">
 			<joint idref="joint"/>
 			<prior idref="prior"/>
 			<likelihood idref="likelihood"/>
@@ -7071,7 +7070,7 @@ Final Joint density: -56790.3981
 		</log>
 
 		<!-- write tree log to file                                                  -->
-		<logTree id="treeFileLog" logEvery="3000" nexusFormat="true" fileName="benchmark-big-1.trees" sortTranslationTable="true">
+		<logTree id="treeFileLog" logEvery="1400" nexusFormat="true" fileName="benchmark-big-1.trees" sortTranslationTable="true">
 			<treeModel idref="treeModel"/>
 			<trait name="rate" tag="rate">
 				<strictClockBranchRates idref="branchRates"/>

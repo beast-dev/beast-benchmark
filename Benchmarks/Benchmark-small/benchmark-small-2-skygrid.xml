@@ -15,8 +15,8 @@ Operators:
 - upDown on rate and node heights with weight 3.0
   - gmrfGridBlockUpdate on skygrid.logPopSize with weight 2.0
   - Scale on skygrid.precision with weight 1.0
-MCMC length: 20000000 
-Logging every: 20000
+MCMC length: 6200000 
+Logging every: 6200
 Seed: 1234
 Initial Joint density: -13766.0194
 <-->
@@ -1347,7 +1347,7 @@ Initial Joint density: -13766.0194
 	
 
 	<!-- Define MCMC                                                             -->
-	<mcmc id="mcmc" chainLength="20000000" autoOptimize="true" operatorAnalysis="benchmark-small-2-skygrid.ops">
+	<mcmc id="mcmc" chainLength="6200000" autoOptimize="true" operatorAnalysis="benchmark-small-2-skygrid.ops">
 		<joint id="joint">
 			<prior id="prior">
 				<ctmcScalePrior>
@@ -1371,7 +1371,7 @@ Initial Joint density: -13766.0194
 		<operators idref="operators"/>
 
 		<!-- write log to screen                                                     -->
-		<log id="screenLog" logEvery="20000">
+		<log id="screenLog" logEvery="6200">
 			<column label="Joint" dp="4" width="12">
 				<joint idref="joint"/>
 			</column>
@@ -1390,7 +1390,7 @@ Initial Joint density: -13766.0194
 		</log>
 
 		<!-- write log to file                                                       -->
-		<log id="fileLog" logEvery="20000" fileName="benchmark-small-2-skygrid.log" overwrite="false">
+		<log id="fileLog" logEvery="6200" fileName="benchmark-small-2-skygrid.log" overwrite="false">
 			<joint idref="joint"/>
 			<prior idref="prior"/>
 			<likelihood idref="likelihood"/>
@@ -1409,7 +1409,7 @@ Initial Joint density: -13766.0194
 		</log>
 
 		<!-- write tree log to file                                                  -->
-		<logTree id="treeFileLog" logEvery="20000" nexusFormat="true" fileName="benchmark-small-2-skygrid.trees" sortTranslationTable="true">
+		<logTree id="treeFileLog" logEvery="6200" nexusFormat="true" fileName="benchmark-small-2-skygrid.trees" sortTranslationTable="true">
 			<treeModel idref="treeModel"/>
 			<trait name="rate" tag="rate">
 				<strictClockBranchRates idref="branchRates"/>

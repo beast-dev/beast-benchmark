@@ -17,8 +17,8 @@ Operators:
   - upDown on rate and popSize with weight 3.0
   - Scale on alpha with weight 3.0
   - siteRateCategoryGibbs on the variable sites' rate categories with weight 9.76
-MCMC length: 3000000 
-Logging every: 3000
+MCMC length: 6000000 
+Logging every: 6000
 Seed: 1234
 Initial Joint density: -104204.8521
 <-->
@@ -7034,7 +7034,7 @@ Initial Joint density: -104204.8521
 	
 
 	<!-- Define MCMC                                                             -->
-	<mcmc id="mcmc" chainLength="3000000" autoOptimize="true" operatorAnalysis="benchmark-big-1-gamma-mat.ops">
+	<mcmc id="mcmc" chainLength="6000000" autoOptimize="true" operatorAnalysis="benchmark-big-1-gamma-mat.ops">
 		<joint id="joint">
 			<prior id="prior">
 				<ctmcScalePrior>
@@ -7061,7 +7061,7 @@ Initial Joint density: -104204.8521
 		<operators idref="operators"/>
 
 		<!-- write log to screen                                                     -->
-		<log id="screenLog" logEvery="3000">
+		<log id="screenLog" logEvery="6000">
 			<column label="Joint" dp="4" width="12">
 				<joint idref="joint"/>
 			</column>
@@ -7080,7 +7080,7 @@ Initial Joint density: -104204.8521
 		</log>
 
 		<!-- write log to file                                                       -->
-		<log id="fileLog" logEvery="3000" fileName="benchmark-big-1-gamma-mat.log" overwrite="false">
+		<log id="fileLog" logEvery="6000" fileName="benchmark-big-1-gamma-mat.log" overwrite="false">
 			<matStatistic idref="mat"/>
 			<joint idref="joint"/>
 			<prior idref="prior"/>
@@ -7099,7 +7099,7 @@ Initial Joint density: -104204.8521
 		</log>
 
 		<!-- write tree log to file                                                  -->
-		<logTree id="treeFileLog" logEvery="3000" nexusFormat="true" fileName="benchmark-big-1-gamma-mat.trees" sortTranslationTable="true">
+		<logTree id="treeFileLog" logEvery="6000" nexusFormat="true" fileName="benchmark-big-1-gamma-mat.trees" sortTranslationTable="true">
 			<treeModel idref="treeModel"/>
 			<trait name="rate" tag="rate">
 				<strictClockBranchRates idref="branchRates"/>

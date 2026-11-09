@@ -15,11 +15,10 @@ Operators:
   - fixedHeightSPR on tree with weight 6.4 (with mutation history resampling)
   - mutationHistoryGibbs on the mutational history with weight 6.4 (a node and up to 2 ancestors)
   - upDown on rate and popSize with weight 3.0
-MCMC length: 10000000 
-Logging every: 10000
+MCMC length: 600000 
+Logging every: 600
 Seed: 1234
 Initial Joint density: -2126648.2918
-Final Joint density: -336698.2167
 <-->
 
 <beast version="10.5.0">
@@ -496,7 +495,7 @@ Final Joint density: -336698.2167
 	
 
 	<!-- Define MCMC                                                             -->
-	<mcmc id="mcmc" chainLength="10000000" autoOptimize="true" operatorAnalysis="benchmark-wide-1-mat.ops">
+	<mcmc id="mcmc" chainLength="600000" autoOptimize="true" operatorAnalysis="benchmark-wide-1-mat.ops">
 		<joint id="joint">
 			<prior id="prior">
 				<gammaPrior shape="0.001" scale="1000.0" offset="0.0">
@@ -514,7 +513,7 @@ Final Joint density: -336698.2167
 		<operators idref="operators"/>
 
 		<!-- write log to screen                                                     -->
-		<log id="screenLog" logEvery="10000">
+		<log id="screenLog" logEvery="600">
 			<column label="Joint" dp="4" width="12">
 				<joint idref="joint"/>
 			</column>
@@ -530,7 +529,7 @@ Final Joint density: -336698.2167
 		</log>
 
 		<!-- write log to file                                                       -->
-		<log id="fileLog" logEvery="10000" fileName="benchmark-wide-1-mat.log" overwrite="false">
+		<log id="fileLog" logEvery="600" fileName="benchmark-wide-1-mat.log" overwrite="false">
 			<matStatistic idref="mat"/>
 			<joint idref="joint"/>
 			<prior idref="prior"/>
@@ -547,7 +546,7 @@ Final Joint density: -336698.2167
 		</log>
 
 		<!-- write tree log to file                                                  -->
-		<logTree id="treeFileLog" logEvery="10000" nexusFormat="true" fileName="benchmark-wide-1-mat.trees" sortTranslationTable="true">
+		<logTree id="treeFileLog" logEvery="600" nexusFormat="true" fileName="benchmark-wide-1-mat.trees" sortTranslationTable="true">
 			<treeModel idref="treeModel"/>
 			<trait name="rate" tag="rate">
 				<strictClockBranchRates idref="branchRates"/>

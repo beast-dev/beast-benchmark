@@ -17,8 +17,8 @@ Operators:
 - upDown on rate and popSize with weight 3.0
   - Scale on alpha with weight 3.0
   - siteRateCategoryGibbs on the variable sites' rate categories with weight 14.41
-MCMC length: 2500000 
-Logging every: 2500
+MCMC length: 5500000 
+Logging every: 5500
 Seed: 1234
 Initial Joint density: -110149.9741
 <-->
@@ -10289,7 +10289,7 @@ Initial Joint density: -110149.9741
 	
 
 	<!-- Define MCMC                                                             -->
-	<mcmc id="mcmc" chainLength="2500000" autoOptimize="true" operatorAnalysis="benchmark-tall-1-gamma-mat.ops">
+	<mcmc id="mcmc" chainLength="5500000" autoOptimize="true" operatorAnalysis="benchmark-tall-1-gamma-mat.ops">
 		<joint id="joint">
 			<prior id="prior">
 				<ctmcScalePrior>
@@ -10316,7 +10316,7 @@ Initial Joint density: -110149.9741
 		<operators idref="operators"/>
 
 		<!-- write log to screen                                                     -->
-		<log id="screenLog" logEvery="2500">
+		<log id="screenLog" logEvery="5500">
 			<column label="Joint" dp="4" width="12">
 				<joint idref="joint"/>
 			</column>
@@ -10335,7 +10335,7 @@ Initial Joint density: -110149.9741
 		</log>
 
 		<!-- write log to file                                                       -->
-		<log id="fileLog" logEvery="2500" fileName="benchmark-tall-1-gamma-mat.log" overwrite="false">
+		<log id="fileLog" logEvery="5500" fileName="benchmark-tall-1-gamma-mat.log" overwrite="false">
 			<matStatistic idref="mat"/>
 			<joint idref="joint"/>
 			<prior idref="prior"/>
@@ -10354,7 +10354,7 @@ Initial Joint density: -110149.9741
 		</log>
 
 		<!-- write tree log to file                                                  -->
-		<logTree id="treeFileLog" logEvery="2500" nexusFormat="true" fileName="benchmark-tall-1-gamma-mat.trees" sortTranslationTable="true">
+		<logTree id="treeFileLog" logEvery="5500" nexusFormat="true" fileName="benchmark-tall-1-gamma-mat.trees" sortTranslationTable="true">
 			<treeModel idref="treeModel"/>
 			<trait name="rate" tag="rate">
 				<strictClockBranchRates idref="branchRates"/>

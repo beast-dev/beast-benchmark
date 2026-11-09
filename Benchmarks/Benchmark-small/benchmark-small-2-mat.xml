@@ -15,11 +15,10 @@ Operators:
 - fixedHeightSPR on tree with weight 16.5 (with mutation history resampling)
 - mutationHistoryGibbs on the mutational history with weight 16.5 (a node and up to 2 ancestors)
 - upDown on rate and popSize with weight 3.0
-MCMC length: 20000000 
-Logging every: 20000
+MCMC length: 34000000 
+Logging every: 34000
 Seed: 1234
 Initial Joint density: -13941.1097
-Final Joint density: -6129.5885
 <-->
 
 <beast version="10.5.0">
@@ -1347,7 +1346,7 @@ Final Joint density: -6129.5885
 	
 
 	<!-- Define MCMC                                                             -->
-	<mcmc id="mcmc" chainLength="20000000" autoOptimize="true" operatorAnalysis="benchmark-small-2-mat.ops">
+	<mcmc id="mcmc" chainLength="34000000" autoOptimize="true" operatorAnalysis="benchmark-small-2-mat.ops">
 		<joint id="joint">
 			<prior id="prior">
 				<ctmcScalePrior>
@@ -1371,7 +1370,7 @@ Final Joint density: -6129.5885
 		<operators idref="operators"/>
 
 		<!-- write log to screen                                                     -->
-		<log id="screenLog" logEvery="20000">
+		<log id="screenLog" logEvery="34000">
 			<column label="Joint" dp="4" width="12">
 				<joint idref="joint"/>
 			</column>
@@ -1390,7 +1389,7 @@ Final Joint density: -6129.5885
 		</log>
 
 		<!-- write log to file                                                       -->
-		<log id="fileLog" logEvery="20000" fileName="benchmark-small-2-mat.log" overwrite="false">
+		<log id="fileLog" logEvery="34000" fileName="benchmark-small-2-mat.log" overwrite="false">
 			<matStatistic idref="mat"/>
 			<joint idref="joint"/>
 			<prior idref="prior"/>
@@ -1408,7 +1407,7 @@ Final Joint density: -6129.5885
 		</log>
 
 		<!-- write tree log to file                                                  -->
-		<logTree id="treeFileLog" logEvery="20000" nexusFormat="true" fileName="benchmark-small-2-mat.trees" sortTranslationTable="true">
+		<logTree id="treeFileLog" logEvery="34000" nexusFormat="true" fileName="benchmark-small-2-mat.trees" sortTranslationTable="true">
 			<treeModel idref="treeModel"/>
 			<trait name="rate" tag="rate">
 				<strictClockBranchRates idref="branchRates"/>

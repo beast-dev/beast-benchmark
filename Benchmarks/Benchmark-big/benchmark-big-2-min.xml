@@ -14,11 +14,10 @@ Operators:
 - SubtreeLeap on tree with weight 1610.0
 - fixedHeightSPR on tree with weight 161.0
 - upDown on rate and popSize with weight 3.0
-MCMC length: 1000000 
-Logging every: 1000
+MCMC length: 560000 
+Logging every: 560
 Seed: 1234
 Initial Joint density: -190429.5290
-Final Joint density: -63450.0571
 <-->
 
 <beast version="10.5.0">
@@ -11449,7 +11448,7 @@ Final Joint density: -63450.0571
 	
 
 	<!-- Define MCMC                                                             -->
-	<mcmc id="mcmc" chainLength="1000000" autoOptimize="true" operatorAnalysis="benchmark-big-2.ops">
+	<mcmc id="mcmc" chainLength="560000" autoOptimize="true" operatorAnalysis="benchmark-big-2.ops">
 		<joint id="joint">
 			<prior id="prior">
 				<ctmcScalePrior>
@@ -11473,7 +11472,7 @@ Final Joint density: -63450.0571
 		<operators idref="operators"/>
 
 		<!-- write log to screen                                                     -->
-		<log id="screenLog" logEvery="1000">
+		<log id="screenLog" logEvery="560">
 			<column label="Joint" dp="4" width="12">
 				<joint idref="joint"/>
 			</column>
@@ -11492,7 +11491,7 @@ Final Joint density: -63450.0571
 		</log>
 
 		<!-- write log to file                                                       -->
-		<log id="fileLog" logEvery="1000" fileName="benchmark-big-2.log" overwrite="false">
+		<log id="fileLog" logEvery="560" fileName="benchmark-big-2.log" overwrite="false">
 			<joint idref="joint"/>
 			<prior idref="prior"/>
 			<likelihood idref="likelihood"/>
@@ -11509,7 +11508,7 @@ Final Joint density: -63450.0571
 		</log>
 
 		<!-- write tree log to file                                                  -->
-		<logTree id="treeFileLog" logEvery="1000" nexusFormat="true" fileName="benchmark-big-2.trees" sortTranslationTable="true">
+		<logTree id="treeFileLog" logEvery="560" nexusFormat="true" fileName="benchmark-big-2.trees" sortTranslationTable="true">
 			<treeModel idref="treeModel"/>
 			<trait name="rate" tag="rate">
 				<strictClockBranchRates idref="branchRates"/>
