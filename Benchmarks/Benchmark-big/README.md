@@ -32,3 +32,23 @@ Operators:
 - upDown on rate and popSize with weight 3.0
 
 MCMC: 1,000,000 states, logging every 1000 states
+
+## benchmark-big-3.xml
+
+Source data: SOURCE_DATA_UNKNOWN.fasta
+Taxa: 3959
+Sites: 29409
+Site patterns: 14985
+Sampled: 2020.08 to 2020.83
+
+Model: JC69, strict clock, coalescent constant population tree prior
+Priors: rate ~ ApproximateReferencePrior, popSize ~ Gamma(0.001, 1000)
+Operators:
+- Scale on rate with weight 3.0
+- Scale on popSize with weight 3.0
+- SubtreeLeap on tree with weight 3959.0
+- fixedHeightSPR on tree with weight 395.9
+- upDown on rate and popSize with weight 3.0
+
+MCMC: 1,000,000 states, logging every 1,000 states — a first guess, not yet
+calibrated. Run the sweep, then `apply_lengths.py --from-results`.

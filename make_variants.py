@@ -4,6 +4,11 @@ make_variants.py — derive model variants of the benchmark XMLs
 
 From each benchmark-{type}-{number}-min.xml (BEAGLE) and -mat.xml (MAT) this writes, beside them:
 
+  mat      benchmark-{type}-{number}-mat.xml
+           The BEAGLE tree likelihood replaced by the MAT (mutation-annotated tree) likelihood, which
+           keeps an explicit mutation history. The history is resampled along with the SPR moves and
+           by a mutationHistoryGibbsOperator at the fixedHeightSPR weight. Derived from -min only.
+
   gamma    benchmark-{type}-{number}-gamma.xml / -gamma-mat.xml
            A discrete gamma site rate model with 4 categories. The shape (alpha) has an exponential
            prior (mean 0.5) and a scale operator. The MAT version also samples each variable site's rate
@@ -20,7 +25,7 @@ The header block is rewritten to describe the variant. Initial Joint density is 
 BEAST (with --beast) to state 0 at the header's seed. Final Joint density is left out until a full run
 of each variant has established it.
 
-usage: make_variants.py [--variants gamma,skygrid] [--beast "java ... -jar beast.jar"] [--datasets small-1,...]
+usage: make_variants.py [--variants mat,gamma,skygrid] [--beast "java ... -jar beast.jar"] [--datasets small-1,...]
 """
 import argparse
 import math
@@ -46,6 +51,13 @@ CUT_OFFS = {
     "big-1":   0.88,
     "big-2":   2.9,
     "wide-1":  0.020,
+    # big-3 and tall-2 have never been run, so these two are estimates rather than measurements.
+    # big-3 is SARS-CoV-2 sampled 2020.08-2020.83, whose root sits near the start of the pandemic,
+    # about 0.9 years before the most recent tip.
+    "big-3":   0.95,
+    # tall-2's sampling span is 12.3 years (2000.0-2012.3) and tall-1's root sat about 3.5 years beyond its oldest tip.
+    # Replace it with the measured quantile once tall-2 has a chain to take it from.
+    "tall-2":  16.0,
 }
 
 
@@ -78,6 +90,57 @@ def rename_outputs(text: str, name: str) -> str:
     text = re.sub(r'fileName="benchmark-[\w-]+\.log"', f'fileName="{name}.log"', text)
     text = re.sub(r'fileName="benchmark-[\w-]+\.trees"', f'fileName="{name}.trees"', text)
     return re.sub(r'operatorAnalysis="benchmark-[\w-]+\.ops"', f'operatorAnalysis="{name}.ops"', text)
+
+
+def add_mat(xml: str) -> str:
+    """Swap the BEAGLE tree likelihood for the MAT one, and sample the mutation history alongside."""
+    xml = replace_once(xml, '<patterns id="patterns" from="1" strip="false">',
+                       '<patterns id="patterns" from="1" strip="false" constantOnly="true">')
+
+    likelihood = re.search(r'\t<!-- Likelihood for tree given sequence data[^\n]*\n'
+                           r'\t<treeDataLikelihood id="treeLikelihood".*?</treeDataLikelihood>\n',
+                           xml, re.DOTALL)
+    if not likelihood:
+        raise ValueError("no treeDataLikelihood block to replace")
+    xml = xml.replace(likelihood.group(0), """\t<!-- Mutation-annotated tree (MAT) likelihood for tree given sequence data   -->
+	<matDataLikelihood id="treeLikelihood">
+		<patterns idref="patterns"/>
+		<treeModel idref="treeModel"/>
+		<HKYModel idref="jc"/>
+		<siteModel idref="siteModel"/>
+		<strictClockBranchRates idref="branchRates"/>
+	</matDataLikelihood>
+
+	<!-- Resamples the ancestral states (mutation history) along with SPR moves   -->
+	<mutationHistoryResampler id="matResampler">
+		<matDataLikelihood idref="treeLikelihood"/>
+	</mutationHistoryResampler>
+
+	<!-- Number of mutations and ambiguities in the MAT                          -->
+	<matStatistic id="mat" name="mat">
+		<matDataLikelihood idref="treeLikelihood"/>
+	</matStatistic>
+""")
+
+    # The Gibbs move over the history runs at the same weight as the SPR it accompanies
+    weight = re.search(r'<fixedHeightSubtreePruneRegraft weight="([^"]+)"', xml).group(1)
+    xml = replace_once(xml, "\t</operators>", f"""\t\t<mutationHistoryGibbsOperator weight="{weight}" size="3">
+			<mutationHistoryResampler idref="matResampler"/>
+		</mutationHistoryGibbsOperator>
+	</operators>""")
+
+    xml = xml.replace('<treeDataLikelihood idref="treeLikelihood"/>',
+                      '<matDataLikelihood idref="treeLikelihood"/>')
+    xml = re.sub(r'(<log id="fileLog"[^>]*>\n)', r'\1\t\t\t<matStatistic idref="mat"/>\n', xml, count=1)
+
+    xml = set_header_field(xml, "Model",
+                           "MAT (mutation-annotated tree) likelihood, " + header_field(xml, "Model"))
+    xml = re.sub(r"^(- (?:SubtreeLeap|fixedHeightSPR) on tree with weight [\d.]+)$",
+                 r"\1 (with mutation history resampling)", xml, flags=re.MULTILINE)
+    return re.sub(r"^(- fixedHeightSPR on tree[^\n]*)$",
+                  lambda m: m.group(1) + f"\n- mutationHistoryGibbs on the mutational history with "
+                                         f"weight {weight} (a node and up to 2 ancestors)",
+                  xml, count=1, flags=re.MULTILINE)
 
 
 def add_gamma(xml: str, is_mat: bool) -> str:
@@ -210,13 +273,24 @@ def main() -> None:
         btype, number = dataset.split("-")
         folder = BENCHMARKS / f"Benchmark-{btype}"
         for engine in ("min", "mat"):
-            source = (folder / f"benchmark-{dataset}-{engine}.xml").read_text(encoding="utf-8")
+            path = folder / f"benchmark-{dataset}-{engine}.xml"
+            if not path.exists():
+                # A new dataset starts as -min alone; make its -mat first, then the rest
+                print(f"no {path.relative_to(_SCRIPT_DIR)}, skipping its variants")
+                continue
+            source = path.read_text(encoding="utf-8")
             taxa = int(header_field(source, "Taxa"))
             seed = int(header_field(source, "Seed"))
             for variant in args.variants.split(","):
                 is_mat = engine == "mat"
-                name = f"benchmark-{dataset}-{variant}" + ("-mat" if is_mat else "")
-                xml = add_gamma(source, is_mat) if variant == "gamma" else add_skygrid(source, dataset, taxa)
+                if variant == "mat":
+                    if is_mat:          # -mat is what this variant produces, not what it starts from
+                        continue
+                    name = f"benchmark-{dataset}-mat"
+                    xml = add_mat(source)
+                else:
+                    name = f"benchmark-{dataset}-{variant}" + ("-mat" if is_mat else "")
+                    xml = add_gamma(source, is_mat) if variant == "gamma" else add_skygrid(source, dataset, taxa)
                 xml = rename_outputs(xml, name)
                 xml = set_header_field(xml, "Benchmark", name)
                 xml = re.sub(r"^Final Joint density:.*\n", "", xml, count=1, flags=re.MULTILINE)

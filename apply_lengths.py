@@ -78,7 +78,13 @@ def verify(text: str, states: int, log_every: int):
     if every != [log_every] * 3:
         problems.append(f"logEvery {every} != {[log_every] * 3}")
 
-    block = HEADER_BLOCK_RE.search(text).group(2)
+    block_match = HEADER_BLOCK_RE.search(text)
+    if not block_match:
+        # An XML straight out of BEAUti, not yet given a benchmark header
+        problems.append("no benchmark header block")
+        return problems
+
+    block = block_match.group(2)
     hl = HEADER_LENGTH_RE.search(block)
     he = HEADER_EVERY_RE.search(block)
     if not hl or int(hl.group(2).replace(",", "")) != states:

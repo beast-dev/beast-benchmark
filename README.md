@@ -8,6 +8,8 @@ This folder contains the benchmarking infrastructure for measuring and validatin
 beast-benchmark/
 ├── benchmark.py          # The benchmark runner script
 ├── benchmarks.py         # Finds the XMLs; shared by the scripts below
+├── normalise.py          # Turns a BEAUti XML into a benchmark -min.xml
+├── make_variants.py      # Derives the mat, gamma and skygrid variants
 ├── calibrate.py          # Measures speed and proposes chain lengths
 ├── apply_lengths.py      # Writes those chain lengths into the XMLs
 ├── apply_densities.py    # Writes each run's final joint density into its XML
@@ -324,3 +326,31 @@ both. The name has to follow the convention above for that to work.
    ```
 6. Copy the reported joint densities into the XML header.
 7. Re-run to confirm both values show `✓ PASS`.
+
+## Adding a benchmark
+
+A new benchmark arrives as BEAUti output and becomes six XMLs: the BEAGLE `min` one, the
+MAT one, and the gamma and skygrid variants of each. Put the BEAUti file at
+`Benchmarks/Benchmark-{type}/benchmark-{type}-{number}-min.xml`, then:
+
+```bash
+BEAST="java -Djava.library.path=/usr/local/lib -jar /path/to/beast.jar"
+
+python3 normalise.py big 3 --source SARS-CoV-2.fasta --beast "$BEAST"
+python3 make_variants.py --datasets big-3 --variants mat --beast "$BEAST"
+python3 make_variants.py --datasets big-3 --variants gamma,skygrid --beast "$BEAST"
+```
+
+`normalise.py` rewrites the header, the `beast` version, the coalescent, the optimization
+schedule and the output names, and drops the checkpoint log. `make_variants.py` needs the
+dataset's skygrid cut-off in its `CUT_OFFS` first: the depth the grid reaches back to, which
+should cover the root. Estimate it to start with and replace it with the 97.5% quantile of
+the sampled root height once the benchmark has been run.
+
+The chain length that `normalise.py` writes is a guess. Run the sweep, then
+`apply_lengths.py --from-results` to set it from the measured wall clock, and
+`apply_densities.py` to record the density each chain ends on.
+
+Everything else picks the new XMLs up on its own: `benchmarks.py` finds them, so the
+`run_all*.sh` scripts, `calibrate.py`, `apply_lengths.py` and `apply_densities.py` all
+include them without being edited.
