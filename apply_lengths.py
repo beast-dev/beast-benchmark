@@ -12,6 +12,13 @@ old chain length. Run the sweep again to replace it.
 
     python3 apply_lengths.py --dry-run     # show what would change
     python3 apply_lengths.py               # change it
+
+calibrate.py only times the opening stretch of a chain, which turns out to
+understate the speed of the BEAGLE benchmarks badly on the larger alignments.
+--from-results replaces that estimate with the wall clock of a completed run,
+rescaling each length by how far it landed from the target:
+
+    python3 apply_lengths.py --from-results results.csv --dry-run
 """
 
 import argparse
@@ -21,6 +28,7 @@ import sys
 from pathlib import Path
 
 from benchmarks import xml_path
+from calibrate import round_states
 
 HEADER_BLOCK_RE = re.compile(r'(<!-->\s*)(.*?)(\s*<-->)', re.DOTALL)
 CHAIN_LENGTH_RE = re.compile(r'(chainLength=")(\d+)(")')
@@ -80,6 +88,57 @@ def verify(text: str, states: int, log_every: int):
     return problems
 
 
+def proposals_from_results(path: Path, target: float, tolerance: float) -> list:
+    """Rescale each chain length by how far its last completed run was from the target.
+
+    Returns rows shaped like calibrate.py's, so the caller does not care which
+    source it got them from. The newest run of each benchmark wins; a run already
+    within the tolerance is left alone, so a length only moves when it has to.
+    """
+    with open(path, encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh))
+
+    newest = {}
+    for row in rows:
+        name = row["benchmark"]
+        if name not in newest or row["timestamp"] > newest[name]["timestamp"]:
+            newest[name] = row
+
+    proposals = []
+    for name, row in sorted(newest.items()):
+        proposal = {"benchmark": name, "type": row["type"],
+                    "number": row["number"], "model": row["model"], "error": ""}
+        try:
+            wall = float(row["wall_clock_time"])
+            states = int(row["chain_length"])
+            # BEAST's own runtime covers the chain alone, so the difference is the
+            # startup that no chain length can shorten: hold it back from both sides.
+            startup = max(0.0, wall - float(row["runtime"]) * 60.0)
+        except (ValueError, KeyError):
+            proposal["error"] = "no usable timing in the row"
+            proposals.append(proposal)
+            continue
+
+        chain_time = wall - startup
+        if chain_time <= 0:
+            proposal["error"] = f"ran for {wall:.0f}s, all of it startup"
+            proposals.append(proposal)
+            continue
+
+        proposal["ratio"] = wall / target
+        if abs(wall - target) <= tolerance * target:
+            proposal["error"] = f"within tolerance at {wall:.0f}s"
+            proposals.append(proposal)
+            continue
+
+        scaled = round_states(states * (target - startup) / chain_time)
+        proposal["proposed_states"] = scaled
+        proposal["proposed_log_every"] = scaled // 1000
+        proposals.append(proposal)
+
+    return proposals
+
+
 def check_all(benchmarks: Path) -> int:
     """Confirm every XML's five length fields agree and give 1000 samples."""
     xmls = sorted(benchmarks.glob("Benchmark-*/benchmark-*.xml"))
@@ -119,6 +178,14 @@ def main():
     parser.add_argument("--check", action="store_true",
                         help="Only check that every XML's length fields agree; change nothing")
     parser.add_argument("--calibration", default="calibration.csv", metavar="FILE")
+    parser.add_argument("--from-results", nargs="?", const="results.csv", metavar="FILE",
+                        help="Rescale from the wall clock of completed runs in results.csv, "
+                             "rather than from a calibrate.py estimate")
+    parser.add_argument("--target", type=float, default=600.0, metavar="SECONDS",
+                        help="Wall clock each benchmark should take (default 600)")
+    parser.add_argument("--tolerance", type=float, default=0.2, metavar="FRACTION",
+                        help="Leave a length alone if its run was this close to the target "
+                             "(default 0.2)")
     parser.add_argument("--benchmarks", default=None, metavar="DIR")
     parser.add_argument("--dry-run", action="store_true", help="Show the changes, write nothing")
     parser.add_argument("--keep-final", action="store_true",
@@ -130,12 +197,17 @@ def main():
     if args.check:
         sys.exit(check_all(benchmarks))
 
-    cal = Path(args.calibration)
-    if not cal.exists():
-        sys.exit(f"No {cal} -- run calibrate.py first")
-
-    with open(cal, encoding="utf-8") as fh:
-        rows = list(csv.DictReader(fh))
+    if args.from_results:
+        source = Path(args.from_results)
+        if not source.exists():
+            sys.exit(f"No {source} -- run the sweep first")
+        rows = proposals_from_results(source, args.target, args.tolerance)
+    else:
+        source = Path(args.calibration)
+        if not source.exists():
+            sys.exit(f"No {source} -- run calibrate.py first")
+        with open(source, encoding="utf-8") as fh:
+            rows = list(csv.DictReader(fh))
 
     changed = skipped = failed = 0
     for row in rows:

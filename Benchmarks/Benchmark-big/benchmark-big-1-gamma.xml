@@ -15,8 +15,8 @@ Operators:
   - fixedHeightSPR on tree with weight 97.6
   - upDown on rate and popSize with weight 3.0
   - Scale on alpha with weight 3.0
-MCMC length: 970000 
-Logging every: 970
+MCMC length: 2300000 
+Logging every: 2300
 Seed: 1234
 Initial Joint density: -76799.8408
 <-->
@@ -7017,7 +7017,7 @@ Initial Joint density: -76799.8408
 	
 
 	<!-- Define MCMC                                                             -->
-	<mcmc id="mcmc" chainLength="970000" autoOptimize="true" operatorAnalysis="benchmark-big-1-gamma.ops">
+	<mcmc id="mcmc" chainLength="2300000" autoOptimize="true" operatorAnalysis="benchmark-big-1-gamma.ops">
 		<joint id="joint">
 			<prior id="prior">
 				<ctmcScalePrior>
@@ -7044,7 +7044,7 @@ Initial Joint density: -76799.8408
 		<operators idref="operators"/>
 
 		<!-- write log to screen                                                     -->
-		<log id="screenLog" logEvery="970">
+		<log id="screenLog" logEvery="2300">
 			<column label="Joint" dp="4" width="12">
 				<joint idref="joint"/>
 			</column>
@@ -7063,7 +7063,7 @@ Initial Joint density: -76799.8408
 		</log>
 
 		<!-- write log to file                                                       -->
-		<log id="fileLog" logEvery="970" fileName="benchmark-big-1-gamma.log" overwrite="false">
+		<log id="fileLog" logEvery="2300" fileName="benchmark-big-1-gamma.log" overwrite="false">
 			<joint idref="joint"/>
 			<prior idref="prior"/>
 			<likelihood idref="likelihood"/>
@@ -7081,7 +7081,7 @@ Initial Joint density: -76799.8408
 		</log>
 
 		<!-- write tree log to file                                                  -->
-		<logTree id="treeFileLog" logEvery="970" nexusFormat="true" fileName="benchmark-big-1-gamma.trees" sortTranslationTable="true">
+		<logTree id="treeFileLog" logEvery="2300" nexusFormat="true" fileName="benchmark-big-1-gamma.trees" sortTranslationTable="true">
 			<treeModel idref="treeModel"/>
 			<trait name="rate" tag="rate">
 				<strictClockBranchRates idref="branchRates"/>

@@ -10,6 +10,7 @@ beast-benchmark/
 ├── benchmarks.py         # Finds the XMLs; shared by the scripts below
 ├── calibrate.py          # Measures speed and proposes chain lengths
 ├── apply_lengths.py      # Writes those chain lengths into the XMLs
+├── apply_densities.py    # Writes each run's final joint density into its XML
 ├── run_all.sh            # The `min` set only
 ├── run_all_models.sh     # Every XML, every model variant
 ├── run_all_gpu.sh        # Every BEAGLE XML on the GPU (no mat)
@@ -171,6 +172,42 @@ rounded to two significant figures and a whole multiple of 1000. Then:
 python3 apply_lengths.py --dry-run     # show what would change
 python3 apply_lengths.py               # change it
 ```
+
+### Correcting them from a completed sweep
+
+`calibrate.py` only times the opening stretch of a chain, and that stretch is not
+representative: on the M2 Ultra the BEAGLE benchmarks all ran faster over a full chain than
+over their first minute, by 20% on the small alignments and by eight-fold on `wide-1`. The
+MAT benchmarks, which do not use BEAGLE, came out within 20% throughout.
+
+So treat calibration as the first guess and the sweep as the measurement. After a sweep,
+rescale each length by how far its run landed from the target:
+
+```bash
+python3 apply_lengths.py --from-results --dry-run
+python3 apply_lengths.py --from-results
+```
+
+It reads `results.csv`, takes the newest run of each benchmark, holds back the startup time
+that no chain length can shorten, and leaves alone anything already within `--tolerance`
+(20% by default) so a length only moves when it has to. One pass gets most benchmarks
+inside the tolerance; repeat it after the next sweep for any that are still out.
+
+## Recording the final joint density
+
+Each XML header carries the joint density its chain ends on, and `benchmark.py` compares
+every run against it: a change in BEAST that alters the chain shows up as a deviation. The
+value belongs to one exact chain, so it is only written when the run's chain length and
+seed still match the XML:
+
+```bash
+python3 apply_densities.py --dry-run   # show what would be written
+python3 apply_densities.py             # write it
+```
+
+A benchmark whose length has moved since its last run is reported as `STALE` and left
+without a density until the next sweep. CPU runs win over GPU ones, which end on a
+different value because the arithmetic differs.
 
 `--beast` takes the BEAST launcher script, or a `.jar`, or a bare name found on `PATH`; a
 relative path is fine, as both runners make it absolute before running BEAST in the run
