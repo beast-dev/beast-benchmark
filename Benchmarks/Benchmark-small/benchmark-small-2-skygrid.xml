@@ -19,6 +19,7 @@ MCMC length: 10000000
 Logging every: 10000
 Seed: 1234
 Initial Joint density: -13766.0194
+Final Joint density: -6183.6017
 <-->
 
 <beast version="10.5.0">
