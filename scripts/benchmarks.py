@@ -5,7 +5,7 @@ Where the benchmark XMLs are and what they are called.
 Shared by calibrate.py and apply_lengths.py, and run as a script by the run_all
 shell scripts so that adding or removing a benchmark XML needs no edit to them:
 
-    python3 benchmarks.py          # one "type number model" per line
+    python3 scripts/benchmarks.py          # one "type number model" per line
 """
 
 import os
@@ -17,7 +17,8 @@ from pathlib import Path
 TYPES = ["small", "big", "tall", "wide", "medium"]
 MODELS = ["min", "mat", "gamma", "gamma-mat", "skygrid", "skygrid-mat"]
 
-BENCHMARKS = Path(__file__).resolve().parent / "Benchmarks"
+# The scripts live in scripts/, so the benchmark folder is one level up.
+BENCHMARKS = Path(__file__).resolve().parent.parent / "Benchmarks"
 
 
 def beast_command(beast: str) -> list:

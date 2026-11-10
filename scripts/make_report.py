@@ -3,7 +3,7 @@
 make_report.py — build a one-page HTML summary of results.csv
 
 Usage:
-    python3 make_report.py [results.csv] [-o report.html]
+    python3 scripts/make_report.py [results.csv] [-o report.html]
 
 The CSV rows are embedded in the page as JSON; all derived quantities
 (throughput, speed-ups, groupings) are computed in the browser so the page
@@ -16,15 +16,16 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-_SCRIPT_DIR = Path(__file__).resolve().parent
-TEMPLATE    = _SCRIPT_DIR / "report_template.html"
+# The scripts live in scripts/, so the benchmark folder is one level up.
+_ROOT = Path(__file__).resolve().parent.parent
+TEMPLATE = _ROOT / "report_template.html"
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build an HTML report from results.csv")
-    parser.add_argument("csv", nargs="?", default=str(_SCRIPT_DIR / "results.csv"),
+    parser.add_argument("csv", nargs="?", default=str(_ROOT / "results.csv"),
                         help="Results CSV (default: results.csv beside this script)")
-    parser.add_argument("-o", "--output", default=str(_SCRIPT_DIR / "report.html"),
+    parser.add_argument("-o", "--output", default=str(_ROOT / "report.html"),
                         help="Output HTML file (default: report.html beside this script)")
     args = parser.parse_args()
 

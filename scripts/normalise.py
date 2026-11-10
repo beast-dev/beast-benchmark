@@ -14,9 +14,9 @@ the model and the priors exactly as they are.
 
 Then make the other variants with make_variants.py, which needs the -mat one first:
 
-    python3 normalise.py big 3 --source SARS-CoV-2.fasta --beast "java ... -jar beast.jar"
-    python3 make_variants.py --datasets big-3 --variants mat --beast "..."
-    python3 make_variants.py --datasets big-3 --variants gamma,skygrid --beast "..."
+    python3 scripts/normalise.py big 3 --source SARS-CoV-2.fasta --beast "java ... -jar beast.jar"
+    python3 scripts/make_variants.py --datasets big-3 --variants mat --beast "..."
+    python3 scripts/make_variants.py --datasets big-3 --variants gamma,skygrid --beast "..."
 
 make_variants.py needs the dataset's skygrid cut-off in its CUT_OFFS before that last step.
 """

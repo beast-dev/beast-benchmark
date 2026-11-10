@@ -8,10 +8,10 @@ most useful when they all take about the same time. This script does not run a
 chain to the end: it starts BEAST, waits for the screen log, times a stretch of
 states, and kills it.
 
-    python3 calibrate.py                       # all 42, 10 minute target
-    python3 calibrate.py --target 300          # 5 minute target
-    python3 calibrate.py small 1 min           # just one
-    python3 calibrate.py --beast /path/to/beast --machine machine1
+    python3 scripts/calibrate.py                       # all 42, 10 minute target
+    python3 scripts/calibrate.py --target 300          # 5 minute target
+    python3 scripts/calibrate.py small 1 min           # just one
+    python3 scripts/calibrate.py --beast /path/to/beast --machine machine1
 
 Unrecognised options are passed through to BEAST, so --beagle_gpu works here as it
 does for benchmark.py.
@@ -160,7 +160,7 @@ def main():
                         help="Machine identifier, recorded in the csv")
     args, extra_beast_args = parser.parse_known_args()
 
-    here = Path(__file__).resolve().parent
+    here = Path(__file__).resolve().parent.parent
     benchmarks = Path(args.benchmarks) if args.benchmarks else here / "Benchmarks"
     if not benchmarks.is_dir():
         sys.exit(f"No Benchmarks folder at {benchmarks}")
@@ -239,7 +239,7 @@ def main():
         for r in no_beagle:
             print(f"  {r['benchmark']}")
     if ok:
-        print("Apply with:  python3 apply_lengths.py")
+        print("Apply with:  python3 scripts/apply_lengths.py")
 
 
 if __name__ == "__main__":

@@ -25,7 +25,7 @@ The header block is rewritten to describe the variant. Initial Joint density is 
 BEAST (with --beast) to state 0 at the header's seed. Final Joint density is left out until a full run
 of each variant has established it.
 
-usage: make_variants.py [--variants mat,gamma,skygrid] [--beast "java ... -jar beast.jar"] [--datasets small-1,...]
+usage: scripts/make_variants.py [--variants mat,gamma,skygrid] [--beast "java ... -jar beast.jar"] [--datasets small-1,...]
 """
 import argparse
 import math
@@ -35,8 +35,9 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-_SCRIPT_DIR = Path(__file__).resolve().parent
-BENCHMARKS  = _SCRIPT_DIR / "Benchmarks"
+# The scripts live in scripts/, so the benchmark folder is one level up.
+_ROOT = Path(__file__).resolve().parent.parent
+BENCHMARKS = _ROOT / "Benchmarks"
 
 # Skygrid cut-off (time before the most recent tip, in the tree's units) for each dataset: the 97.5%
 # quantile of the root height pooled over the M5 Max runs of 2026-10-18/19 (BEAGLE -min and MAT -mat,
@@ -276,7 +277,7 @@ def main() -> None:
             path = folder / f"benchmark-{dataset}-{engine}.xml"
             if not path.exists():
                 # A new dataset starts as -min alone; make its -mat first, then the rest
-                print(f"no {path.relative_to(_SCRIPT_DIR)}, skipping its variants")
+                print(f"no {path.relative_to(_ROOT)}, skipping its variants")
                 continue
             source = path.read_text(encoding="utf-8")
             taxa = int(header_field(source, "Taxa"))
@@ -300,7 +301,7 @@ def main() -> None:
                     xml = re.sub(r"^Initial Joint density:.*\n", "", xml, count=1, flags=re.MULTILINE)
                 out = folder / f"{name}.xml"
                 out.write_text(xml, encoding="utf-8")
-                print(f"wrote {out.relative_to(_SCRIPT_DIR)}  {header_field(xml, 'Initial Joint density') if args.beast else ''}")
+                print(f"wrote {out.relative_to(_ROOT)}  {header_field(xml, 'Initial Joint density') if args.beast else ''}")
 
 
 if __name__ == "__main__":

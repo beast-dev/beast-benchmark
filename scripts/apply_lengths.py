@@ -10,15 +10,15 @@ them, keeping 1000 samples per run.
 It also drops the "Final Joint density" line, because that value belongs to the
 old chain length. Run the sweep again to replace it.
 
-    python3 apply_lengths.py --dry-run     # show what would change
-    python3 apply_lengths.py               # change it
+    python3 scripts/apply_lengths.py --dry-run     # show what would change
+    python3 scripts/apply_lengths.py               # change it
 
 calibrate.py only times the opening stretch of a chain, which turns out to
 understate the speed of the BEAGLE benchmarks badly on the larger alignments.
 --from-results replaces that estimate with the wall clock of a completed run,
 rescaling each length by how far it landed from the target:
 
-    python3 apply_lengths.py --from-results results.csv --dry-run
+    python3 scripts/apply_lengths.py --from-results results.csv --dry-run
 """
 
 import argparse
@@ -198,7 +198,7 @@ def main():
                         help="Leave the Final Joint density line alone (it will be stale)")
     args = parser.parse_args()
 
-    here = Path(__file__).resolve().parent
+    here = Path(__file__).resolve().parent.parent
     benchmarks = Path(args.benchmarks) if args.benchmarks else here / "Benchmarks"
     if args.check:
         sys.exit(check_all(benchmarks))

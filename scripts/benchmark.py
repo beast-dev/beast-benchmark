@@ -4,7 +4,7 @@
 benchmark.py — Run a BEAST benchmark XML and report initial/final Joint density.
 
 Usage:
-    python benchmark.py <type> <number> [--seed SEED] [--beast PATH] [--states STATES]
+    python scripts/benchmark.py <type> <number> [--seed SEED] [--beast PATH] [--states STATES]
 
 Arguments:
     type     Benchmark type: big, small, tall, wide, medium
@@ -22,7 +22,7 @@ Options:
                       with ChainProfile, and a launcher that runs java (it is passed through
                       JDK_JAVA_OPTIONS)
     [extra args]      Any unrecognised arguments are forwarded directly to BEAST
-                      (e.g. python benchmark.py big 1 min -beagle_GPU -beagle_double)
+                      (e.g. python scripts/benchmark.py big 1 min -beagle_GPU -beagle_double)
 
 The XML header comment (see benchmark-big-1.xml) is parsed for expected values:
     MCMC length, Logging every, Seed, Initial Joint density, Final Joint density
@@ -46,10 +46,11 @@ from typing import Optional
 # Paths
 # ---------------------------------------------------------------------------
 
-_SCRIPT_DIR    = Path(__file__).resolve().parent
-BENCHMARKS_DIR = _SCRIPT_DIR / "Benchmarks"
-RESULTS_DIR    = _SCRIPT_DIR / "Results"
-CSV_PATH       = _SCRIPT_DIR / "results.csv"
+# The scripts live in scripts/, so the benchmark folder is one level up.
+_ROOT          = Path(__file__).resolve().parent.parent
+BENCHMARKS_DIR = _ROOT / "Benchmarks"
+RESULTS_DIR    = _ROOT / "Results"
+CSV_PATH       = _ROOT / "results.csv"
 
 
 # ---------------------------------------------------------------------------

@@ -15,7 +15,7 @@
 
 cd "$(dirname "$0")" || exit 1
 
-python3 benchmarks.py | while read -r type number model; do
+python3 scripts/benchmarks.py | while read -r type number model; do
     [ "$model" = "min" ] || continue
-    python3 benchmark.py "$type" "$number" "$model" --append "$@" </dev/null
+    python3 scripts/benchmark.py "$type" "$number" "$model" --append "$@" </dev/null
 done

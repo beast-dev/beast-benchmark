@@ -6,17 +6,18 @@ This folder contains the benchmarking infrastructure for measuring and validatin
 
 ```
 beast-benchmark/
-├── benchmark.py          # The benchmark runner script
-├── benchmarks.py         # Finds the XMLs; shared by the scripts below
-├── normalise.py          # Turns a BEAUti XML into a benchmark -min.xml
-├── make_variants.py      # Derives the mat, gamma and skygrid variants
-├── calibrate.py          # Measures speed and proposes chain lengths
-├── apply_lengths.py      # Writes those chain lengths into the XMLs
-├── apply_densities.py    # Writes each run's final joint density into its XML
 ├── run_all.sh            # The `min` set only
 ├── run_all_models.sh     # Every XML, every model variant
 ├── run_all_gpu.sh        # Every BEAGLE XML on the GPU (no mat)
 ├── README.md             # This file
+├── scripts/              # Run from this folder, not from inside scripts/
+│   ├── benchmark.py          # The benchmark runner script
+│   ├── benchmarks.py         # Finds the XMLs; shared by the scripts below
+│   ├── normalise.py          # Turns a BEAUti XML into a benchmark -min.xml
+│   ├── make_variants.py      # Derives the mat, gamma and skygrid variants
+│   ├── calibrate.py          # Measures speed and proposes chain lengths
+│   ├── apply_lengths.py      # Writes those chain lengths into the XMLs
+│   └── apply_densities.py    # Writes each run's final joint density into its XML
 ├── Benchmarks/           # Benchmark XML files, organised by type
 │   ├── Benchmark-big/
 │   │   └── benchmark-big-1-min.xml
@@ -85,7 +86,7 @@ Model labels in use:
 The `gamma` and `skygrid` XMLs are generated from each dataset's `min` and `mat` XMLs by `make_variants.py`:
 
 ```bash
-python3 make_variants.py --beast "java -Djava.library.path=/opt/homebrew/lib -cp beast.jar dr.app.beast.BeastMain"
+python3 scripts/make_variants.py --beast "java -Djava.library.path=/opt/homebrew/lib -cp beast.jar dr.app.beast.BeastMain"
 ```
 
 - **gamma:** the shape `alpha` has an Exponential(mean 0.5) prior and a scale operator (weight 3). The MAT
@@ -102,19 +103,19 @@ With `--beast`, the script runs each XML to state 0 to fill in `Initial Joint de
 ## Running a benchmark
 
 ```bash
-python3 benchmark.py <type> <number> <model> [options]
+python3 scripts/benchmark.py <type> <number> <model> [options]
 ```
 
 **Example — run the small-1 minimum-model benchmark:**
 
 ```bash
-python3 benchmark.py small 1 min
+python3 scripts/benchmark.py small 1 min
 ```
 
 **Example — tag the run with a machine name:**
 
 ```bash
-python3 benchmark.py small 1 min --machine bivalve
+python3 scripts/benchmark.py small 1 min --machine bivalve
 ```
 
 **Full usage:**
@@ -157,7 +158,7 @@ It does not run a chain to the end. It starts BEAST, waits for the screen log, t
 stretch of states, and kills it:
 
 ```bash
-python3 calibrate.py --target 600 --beast /path/to/beast --machine machine1
+python3 scripts/calibrate.py --target 600 --beast /path/to/beast --machine machine1
 ```
 
 That writes `calibration.csv` with, per benchmark, the startup time (JVM, XML parsing,
@@ -171,8 +172,8 @@ states = (target - startup) / seconds_per_state
 rounded to two significant figures and a whole multiple of 1000. Then:
 
 ```bash
-python3 apply_lengths.py --dry-run     # show what would change
-python3 apply_lengths.py               # change it
+python3 scripts/apply_lengths.py --dry-run     # show what would change
+python3 scripts/apply_lengths.py               # change it
 ```
 
 ### Correcting them from a completed sweep
@@ -186,8 +187,8 @@ So treat calibration as the first guess and the sweep as the measurement. After 
 rescale each length by how far its run landed from the target:
 
 ```bash
-python3 apply_lengths.py --from-results --dry-run
-python3 apply_lengths.py --from-results
+python3 scripts/apply_lengths.py --from-results --dry-run
+python3 scripts/apply_lengths.py --from-results
 ```
 
 It reads `results.csv`, takes the newest run of each benchmark, holds back the startup time
@@ -203,8 +204,8 @@ value belongs to one exact chain, so it is only written when the run's chain len
 seed still match the XML:
 
 ```bash
-python3 apply_densities.py --dry-run   # show what would be written
-python3 apply_densities.py             # write it
+python3 scripts/apply_densities.py --dry-run   # show what would be written
+python3 scripts/apply_densities.py             # write it
 ```
 
 A benchmark whose length has moved since its last run is reported as `STALE` and left
@@ -218,7 +219,7 @@ somewhere Java already looks — otherwise BEAST exits with "No acceptable BEAGL
 plugins found" and only the `mat` benchmarks run. Point `JDK_JAVA_OPTIONS` at it if needed:
 
 ```bash
-JDK_JAVA_OPTIONS=-Djava.library.path=/usr/local/lib python3 calibrate.py --beast ./beast.jar
+JDK_JAVA_OPTIONS=-Djava.library.path=/usr/local/lib python3 scripts/calibrate.py --beast ./beast.jar
 ```
 
 `calibrate.py` says `NO BEAGLE` against any non-`mat` benchmark that ran without it, and
@@ -317,12 +318,12 @@ both. The name has to follow the convention above for that to work.
 3. Add the structured header comment (see format above).
 4. Set the chain length so the run takes about as long as the others:
    ```bash
-   python3 calibrate.py {type} {number} {model} --target 600
-   python3 apply_lengths.py
+   python3 scripts/calibrate.py {type} {number} {model} --target 600
+   python3 scripts/apply_lengths.py
    ```
 5. Run once with the canonical seed to obtain the initial and final joint densities:
    ```bash
-   python3 benchmark.py {type} {number} {model} --seed 1234
+   python3 scripts/benchmark.py {type} {number} {model} --seed 1234
    ```
 6. Copy the reported joint densities into the XML header.
 7. Re-run to confirm both values show `✓ PASS`.
@@ -336,9 +337,9 @@ MAT one, and the gamma and skygrid variants of each. Put the BEAUti file at
 ```bash
 BEAST="java -Djava.library.path=/usr/local/lib -jar /path/to/beast.jar"
 
-python3 normalise.py big 3 --source SARS-CoV-2.fasta --beast "$BEAST"
-python3 make_variants.py --datasets big-3 --variants mat --beast "$BEAST"
-python3 make_variants.py --datasets big-3 --variants gamma,skygrid --beast "$BEAST"
+python3 scripts/normalise.py big 3 --source SARS-CoV-2.fasta --beast "$BEAST"
+python3 scripts/make_variants.py --datasets big-3 --variants mat --beast "$BEAST"
+python3 scripts/make_variants.py --datasets big-3 --variants gamma,skygrid --beast "$BEAST"
 ```
 
 `normalise.py` rewrites the header, the `beast` version, the coalescent, the optimization

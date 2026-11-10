@@ -11,8 +11,8 @@ So a row is only used when its chain length and seed still match the XML. A
 benchmark whose length has moved since its last run is reported and left alone,
 to be filled in after the next sweep.
 
-    python3 apply_densities.py --dry-run     # show what would be written
-    python3 apply_densities.py               # write it
+    python3 scripts/apply_densities.py --dry-run     # show what would be written
+    python3 scripts/apply_densities.py               # write it
 """
 
 import argparse
@@ -72,7 +72,7 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Show the changes, write nothing")
     args = parser.parse_args()
 
-    here = Path(__file__).resolve().parent
+    here = Path(__file__).resolve().parent.parent
     benchmarks = Path(args.benchmarks) if args.benchmarks else here / "Benchmarks"
 
     results = Path(args.results)

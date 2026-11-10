@@ -16,9 +16,9 @@
 
 cd "$(dirname "$0")" || exit 1
 
-python3 benchmarks.py | while read -r type number model; do
+python3 scripts/benchmarks.py | while read -r type number model; do
     case "$model" in
         *mat) continue ;;
     esac
-    python3 benchmark.py "$type" "$number" "$model" --append --beagle_gpu "$@" </dev/null
+    python3 scripts/benchmark.py "$type" "$number" "$model" --append --beagle_gpu "$@" </dev/null
 done
