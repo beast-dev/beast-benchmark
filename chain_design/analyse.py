@@ -437,9 +437,9 @@ def swap_table(out_path: Path):
 
 
 def analyse_pilot(config):
-    conds = [c for c in cc.read_conditions() if c["phase"] in ("throughput", "tempering", "jvm", "mixing")]
+    conds = [c for c in cc.read_conditions() if c["phase"] in ("throughput", "tempering", "jvm", "mixing", "swapcheck")]
     speeds, totals = {}, {}
-    jvm, tempering, gpu = {}, {}, {}
+    jvm, tempering, gpu, swapcheck = {}, {}, {}, {}
     mixing_joint = []
     for cond in conds:
         run_dir = cc.paths()["runs"] / cond["run_id"]
@@ -469,6 +469,9 @@ def analyse_pilot(config):
         elif cond["phase"] == "jvm":
             jvm[cond["run_id"]] = dict(per_chain=float(np.mean(chain_speeds)), total=total,
                                        gc_pause_fraction=gc_pause_fraction(run_dir, result["wall_seconds"]))
+        elif cond["phase"] == "swapcheck":
+            table = swap_table(run_dir / "beast.out")
+            swapcheck[cond["config"]] = dict(ladder_ratio=cond["ladder_ratio"], per_chain=per_chain, swaps=table)
         else:
             table = swap_table(run_dir / "beast.out")
             neighbours = [r["rate"] for r in table if abs(r["i"] - r["j"]) == 1]
@@ -476,7 +479,8 @@ def analyse_pilot(config):
                 config=cond["config"], per_chain=per_chain, swaps=table,
                 min_neighbour_rate=min(neighbours) if neighbours else None))
 
-    summary = dict(speeds={}, speed_spread={}, totals={}, jvm=jvm, tempering=tempering, gpu_utilisation=gpu)
+    summary = dict(speeds={}, speed_spread={}, totals={}, jvm=jvm, tempering=tempering, gpu_utilisation=gpu,
+                   swapcheck=swapcheck)
     for key, values in speeds.items():
         # medians, so that one disturbed repeat cannot decide t* or a gain
         summary["speeds"][key] = float(np.median(values))
@@ -533,6 +537,12 @@ def analyse_pilot(config):
         print(f"ladder ratio {r}: " + ", ".join(f"{v['config']} min neighbour swap rate {v['min_neighbour_rate']}" for v in vs))
     if "ladder_ratio" in summary:
         print(f"chosen ladder ratio: {summary['ladder_ratio']}")
+    for cid, v in swapcheck.items():
+        print(f"swap check {cid} (ladder ratio {v['ladder_ratio']}, {v['per_chain']:.0f} states/s per chain):")
+        if not v["swaps"]:
+            print("  no swap table in beast.out (did the run end by itself?)")
+        for r in v["swaps"]:
+            print(f"  {r['i']} <-> {r['j']}: {r['rate']:.3f}")
     for k, v in jvm.items():
         print(f"{k}: total {v['total']:.0f} states/s, GC pauses {v['gc_pause_fraction']:.2%}")
 

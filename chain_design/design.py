@@ -6,6 +6,7 @@ Writes conditions.csv for a phase of the chain-design study.
   python3 design.py mixing        # pilot (darwin): one long run to measure mixing and the joint's SD
   python3 design.py tempering     # pilot: ladders (needs the throughput speeds; on darwin the joint SD)
   python3 design.py main          # the main grid (needs pilot/summary.json)
+  python3 design.py swapcheck     # darwin: swap rates of the tempered main configurations
 
 Phases are appended to conditions.csv; existing rows are kept.
 """
@@ -151,6 +152,25 @@ def tempering_rows(config, summary):
     return rows
 
 
+def swapcheck_rows(config, summary):
+    """One run per tempered main configuration, long enough to pass burn-in and short enough to end
+    by itself (and so print BEAST's swap table): a 16 h main run can be stopped at its time limit
+    first, because sustained speeds are below the 8-minute pilot speeds."""
+    s = config["swapcheck"]
+    ratio = config["tempering"]["ladder_ratio"] or summary.get("ladder_ratio")
+    rows = []
+    for cid in s["configs"]:
+        c = config["main"]["configs"][cid]
+        per_chain = speed(summary, speed_key(cid, c, summary))
+        states = int(per_chain * s["speed_factor"] * s["hours"] * 3600)
+        rows.append(row(run_id=f"swapcheck_{cid}", phase="swapcheck", config=cid, chains=c["chains"],
+                        tempered=c["tempered"], threads=c["threads"], seed=s["seed"], minutes=s["hours"] * 60,
+                        states=states, log_every=max(1000, int(round(states / 1000, -3))), ladder_ratio=ratio,
+                        swap_every=max(100, int(round(per_chain * config["tempering"]["swap_block_seconds"], -2))),
+                        **config_fields(c)))
+    return rows
+
+
 def main_rows(config, summary):
     m = config["main"]
     ratio = config["tempering"]["ladder_ratio"] or summary.get("ladder_ratio")
@@ -200,7 +220,7 @@ def main_rows(config, summary):
 
 
 def main():
-    phases = ("throughput", "mixing", "tempering", "main")
+    phases = ("throughput", "mixing", "tempering", "main", "swapcheck")
     if len(sys.argv) < 2 or sys.argv[1] not in phases:
         sys.exit(__doc__)
     config = cc.load_config()
@@ -211,7 +231,8 @@ def main():
         summary = cc.load_pilot_summary()
         if summary is None:
             sys.exit("no pilot/summary.json: run the throughput pilot, then python3 analyse.py pilot")
-        rows = {"mixing": mixing_rows, "tempering": tempering_rows, "main": main_rows}[phase](config, summary)
+        rows = {"mixing": mixing_rows, "tempering": tempering_rows, "main": main_rows,
+                "swapcheck": swapcheck_rows}[phase](config, summary)
     all_rows = cc.write_conditions(rows, append=True)
     added = [r for r in all_rows if r["phase"] == phase]
     hours = sum(float(r["minutes"]) for r in added) / 60  # each run has the machine to itself

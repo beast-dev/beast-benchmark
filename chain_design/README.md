@@ -235,6 +235,14 @@ A 4-rung set at that spacing only reaches β = 0.946, so GT3 was replaced in the
 **GT12**: one ladder of 12 rungs on the same 12 GPU instances, reaching β = 0.80. The main grid is
 **C20, G1, G10, GT and GT12** × 3 seeds × 16 h.
 
+**Sustained speed and the swap check (2026-11-11).** Over 16 h the configurations ran slower than
+their 8-minute pilot speeds: GT12 at 631 states/s per chain against 804, and G10 about 12% slower.
+A run's chain length is set from the pilot speed, so G10 ran about 18 h and GT12 was stopped at
+the backstop limit (20.2 h) before it finished. A run that is stopped never prints BEAST's swap
+table. The analysis compares every configuration at exactly `main.hours`, so the extra time is
+ignored. GT12's swap rates come from a separate 4 h run, sized to end by itself:
+`python3 design.py swapcheck && python3 run_grid.py --phase swapcheck && python3 analyse.py pilot`.
+
 The pilot also measures G2, G6, C10 and an earlier M (2 GPU chains plus 4 CPU chains × 4 threads)
 as steps on the way; the first darwin pilot showed G4 alone faster than that M, and the main grid
 was trimmed to about 250 h. A mixed run is stopped when its GPU chains are done (its CPU chains

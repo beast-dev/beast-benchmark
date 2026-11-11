@@ -92,6 +92,7 @@
       "numa_gain": ["K2xt10_numa", "K2xt10", 1.10]
     }
   },
+  "swapcheck": {"configs": ["GT12"], "hours": 4, "speed_factor": 0.7, "seed": 950},
   "targets": {"continuous_ess": 200, "clade_ess": 100, "clade_tolerance": 0.05, "mean_tolerance_sd": 0.1},
   "stuck": {"clade_deviation": 0.3},
   "focal_clades": 50,
