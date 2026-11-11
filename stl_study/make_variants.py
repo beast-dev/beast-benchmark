@@ -7,8 +7,8 @@ The edits are textual so the benchmark header and formatting survive:
   - log/trees/ops file names set to the run id
   - subtreeLeap: id, size, weight, targetAcceptance, autoOptimize, distanceKernel
   - subtreeLeap added to the file log (topologyChanged, mean_delta columns)
-  - optionally a second subtreeLeap (id stl2): a copy of the first, children (the MAT
-    resampler hook) included, with its own weight and target acceptance
+  - optionally a second subtreeLeap (id stl2): a copy of the first with its own weight and
+    target acceptance; mutationHistoryResampler idref stripped from both STL operators
 
 Usage (to inspect a variant):
   make_variants.py conditions.csv RUN_ID [-o out.xml]
@@ -82,6 +82,11 @@ def make_variant(text: str, cond: dict, run_id: str, samples: int) -> str:
         tag2 = _set_attribute(tag2, "targetAcceptance", cond["stl2_target"])
         indent = text[text.rindex("\n", 0, start) + 1:start]
         text = text[:end] + "\n" + indent + tag2 + block[len(tag):] + text[end:]
+
+    # Strip mutationHistoryResampler idref from inside STL operators. Newer BEAST validates that
+    # it is absent when matDataLikelihood is present (the mat likelihood resamples automatically
+    # after every subtree move, so the explicit hook is both redundant and disallowed).
+    text = re.sub(r'\s*<mutationHistoryResampler\s+idref="[^"]*"\s*/>', '', text)
 
     # log the operator's rolling topology-change fraction and mean leap distance
     start = text.index('<log id="fileLog"')
