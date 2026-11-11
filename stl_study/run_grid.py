@@ -199,8 +199,8 @@ def check(config, conds, workers) -> bool:
     # one short run per kind of condition: each dataset/likelihood and each kind of setting
     kinds = {}
     for c in conds:
-        for key in [("data", c["dataset"], c["likelihood"]), ("weights", bool(c["operator_weights"])),
-                    ("target", bool(c["adaptation_target"])), ("sl_target", bool(c["sl_target"])),
+        for key in [("data", c["dataset"], c["likelihood"]), ("weights", bool(c.get("operator_weights"))),
+                    ("sl_target", bool(c["sl_target"])),
                     ("fixed_size", c["sl_adapt"] == "false"), ("kernel", c["sl_kernel"]),
                     ("stl2", c["likelihood"] if c.get("stl2_target") else "")]:
             if key not in kinds and (key[0] == "data" or key[1]):
