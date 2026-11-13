@@ -83,12 +83,18 @@ def make_variant(text: str, cond: dict, run_id: str, samples: int) -> str:
         indent = text[text.rindex("\n", 0, start) + 1:start]
         text = text[:end] + "\n" + indent + tag2 + block[len(tag):] + text[end:]
 
-    # Strip mutationHistoryResampler idref from inside subtreeLeap blocks only.
-    # Newer BEAST disallows it in subtreeLeap (matDataLikelihood resamples automatically),
-    # but mutationHistoryGibbsOperator still requires it, so we cannot strip document-wide.
+    # Strip mutationHistoryResampler idref from inside subtreeLeap and
+    # fixedHeightSubtreePruneRegraft blocks. Newer BEAST disallows it in these operators
+    # (matDataLikelihood resamples automatically after any subtree move), but
+    # mutationHistoryGibbsOperator still requires it, so we cannot strip document-wide.
+    _STRIP_TAGS = ('subtreeLeap', 'fixedHeightSubtreePruneRegraft')
     _out, _pos = [], 0
-    for _m in re.finditer(r'<subtreeLeap\b', text):
-        _end = text.index('</subtreeLeap>', _m.start()) + len('</subtreeLeap>')
+    for _m in re.finditer(r'<(?:' + '|'.join(_STRIP_TAGS) + r')\b', text):
+        _tag = _m.group(0)[1:]  # e.g. 'subtreeLeap'
+        _close_idx = text.find(f'</{_tag}>', _m.start())
+        if _close_idx == -1:
+            continue  # self-closing element, nothing to strip
+        _end = _close_idx + len(f'</{_tag}>')
         _out.append(text[_pos:_m.start()])
         _out.append(re.sub(r'\s*<mutationHistoryResampler\s+idref="[^"]*"\s*/>', '',
                             text[_m.start():_end]))
