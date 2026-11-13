@@ -83,10 +83,18 @@ def make_variant(text: str, cond: dict, run_id: str, samples: int) -> str:
         indent = text[text.rindex("\n", 0, start) + 1:start]
         text = text[:end] + "\n" + indent + tag2 + block[len(tag):] + text[end:]
 
-    # Strip mutationHistoryResampler idref from inside STL operators. Newer BEAST validates that
-    # it is absent when matDataLikelihood is present (the mat likelihood resamples automatically
-    # after every subtree move, so the explicit hook is both redundant and disallowed).
-    text = re.sub(r'\s*<mutationHistoryResampler\s+idref="[^"]*"\s*/>', '', text)
+    # Strip mutationHistoryResampler idref from inside subtreeLeap blocks only.
+    # Newer BEAST disallows it in subtreeLeap (matDataLikelihood resamples automatically),
+    # but mutationHistoryGibbsOperator still requires it, so we cannot strip document-wide.
+    _out, _pos = [], 0
+    for _m in re.finditer(r'<subtreeLeap\b', text):
+        _end = text.index('</subtreeLeap>', _m.start()) + len('</subtreeLeap>')
+        _out.append(text[_pos:_m.start()])
+        _out.append(re.sub(r'\s*<mutationHistoryResampler\s+idref="[^"]*"\s*/>', '',
+                            text[_m.start():_end]))
+        _pos = _end
+    _out.append(text[_pos:])
+    text = ''.join(_out)
 
     # log the operator's rolling topology-change fraction and mean leap distance
     start = text.index('<log id="fileLog"')
